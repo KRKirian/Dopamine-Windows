@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://tempestshaw.github.io/Dopamine/?lang=zh-CN">网站</a> ·
   <a href="https://github.com/TempestShaw/Dopamine/releases/latest">下载</a> ·
   <a href="#开始记录">快速开始</a> ·
   <a href="#隐私">隐私</a> ·
@@ -32,6 +33,8 @@ Dopamine 是一个适用于 macOS 和 Windows 的轻量屏幕时间记录工具�
     <img src="assets/dashboard-light.png" alt="Dopamine 仪表盘：一天的屏幕时间、24 小时时间轴和分类" width="900">
   </picture>
 </p>
+
+<p align="center"><a href="https://tempestshaw.github.io/Dopamine/?lang=zh-CN#film">▶ 看 48 秒的介绍动画</a>，了解 Dopamine 怎么记录一天。</p>
 
 ## 开始记录
 

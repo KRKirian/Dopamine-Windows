@@ -1,0 +1,12 @@
+{
+  "name": "dopamine-site-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "record": "node record-film.mjs"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "playwright-core": "^1.63.0"
+  }
+}

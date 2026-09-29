@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dopamine: see where your hours went</title>
+    <meta name="description" content="A small screen-time tracker for macOS and Windows. It notes which window is in front, keeps that on your computer, and draws your day as a timeline, a breakdown by app, and a month of paint dabs." />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Dopamine: see where your hours went" />
+    <meta property="og:description" content="A screen-time tracker for macOS and Windows that keeps everything on your computer." />
+    <meta property="og:image" content="https://tempestshaw.github.io/Dopamine/assets/dashboard-light.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Figtree:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="sections.css" />
+    <link rel="stylesheet" href="film/film.css" />
+    <script>
+      // Pick the language and recording mode before first paint.
+      (function () {
+        var q = new URLSearchParams(location.search);
+        var saved = null;
+        try { saved = localStorage.getItem("dopamine.site.lang"); } catch (e) {}
+        var nav = (navigator.language || "en").toLowerCase();
+        var guess = /^zh-(tw|hk|mo|hant)/.test(nav) ? "zh-TW" : nav.indexOf("zh") === 0 ? "zh-CN" : "en";
+        var lang = q.get("lang") || saved || guess;
+        if (["en", "zh-CN", "zh-TW"].indexOf(lang) < 0) lang = "en";
+        document.documentElement.lang = lang;
+        document.documentElement.classList.add("js");
+        if (q.get("record")) {
+          document.documentElement.classList.add("record");
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <script type="module" src="main.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+    <div class="page">
+      <header class="wrap top">
+        <a class="brand" href="#main"><img src="assets/mark.png" alt="" width="40" height="40" />Dopamine</a>
+        <nav class="nav" aria-label="Page">
+          <a class="nav-link" href="#film" data-i18n="navTour">Tour</a>
+          <a class="nav-link" href="#privacy" data-i18n="navPrivacy">Privacy</a>
+          <a class="nav-link" href="#download" data-i18n="navDownload">Download</a>
+          <a href="https://github.com/TempestShaw/Dopamine">GitHub</a>
+          <div class="langs" role="group" aria-label="Language">
+            <button type="button" data-lang="en" lang="en">EN</button>
+            <button type="button" data-lang="zh-CN" lang="zh-CN">简</button>
+            <button type="button" data-lang="zh-TW" lang="zh-TW">繁</button>
+          </div>
+        </nav>
+      </header>
+
+      <main id="main">
+        <section class="wrap hero">
+          <p class="eyebrow hand" data-i18n="eyebrow">a screen-time tracker for macOS and Windows</p>
+          <h1 data-i18n="headline">See where your <span class="marker">hours</span> went, without lifting a finger.</h1>
+          <div class="hero-foot">
+            <p class="lede" data-i18n="lede">Dopamine notes which app and window are in front, keeps that on your computer, and draws your day as a timeline, a breakdown by app and window, and a month of paint dabs. It pauses on its own when you lock the screen, sleep, or walk away.</p>
+            <div class="ctas" data-downloads>
+              <a class="btn primary" data-os="mac" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.zip">
+                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 2v10M4.5 8 9 12.5 13.5 8M3 15.5h12" /></svg>
+                <span data-i18n="dlMac">Download for macOS</span>
+              </a>
+              <a class="btn" data-os="win" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-win.zip">
+                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 2v10M4.5 8 9 12.5 13.5 8M3 15.5h12" /></svg>
+                <span data-i18n="dlWin">Download for Windows</span>
+              </a>
+              <span class="meta" data-i18n="meta">macOS 12+ · Windows 10+ · free and open source</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="wrap film-section" id="film" aria-labelledby="film-title">
+          <div class="film-head">
+            <h2 id="film-title" class="hand" data-i18n="filmTitle">A day, painted: a 48-second tour</h2>
+            <a href="media/dopamine-tour.mp4" download data-video data-i18n="filmDownload">Download the video</a>
+          </div>
+          <div class="film sketch" id="film-root" tabindex="-1">
+            <div class="viewport" role="img" aria-labelledby="film-desc">
+              <div class="stage" aria-hidden="true"></div>
+              <div class="f-poster" aria-hidden="true"><span><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.2v11.6c0 .6.7 1 1.2.7l9-5.8c.5-.3.5-1 0-1.4l-9-5.8C4.7 1.2 4 1.6 4 2.2z" /></svg></span></div>
+            </div>
+            <p class="film-caption" aria-hidden="true"></p>
+            <p id="film-desc" class="sr-only" data-i18n="filmDesc">An animation of a day with Dopamine: it notes each window you bring to the front, ignores short glances and time away, sorts windows into categories you can correct, keeps everything in a local file, and paints your month.</p>
+            <div class="controls">
+              <button type="button" class="play" aria-label="Play the tour"></button>
+              <div class="track">
+                <div class="track-line"></div>
+                <div class="track-fill"></div>
+                <ol class="chapters"></ol>
+              </div>
+              <span class="time">0:00 / 0:48</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="wrap section" aria-labelledby="dash-title">
+          <div class="section-head reveal">
+            <h2 id="dash-title" data-i18n="dashTitle">One page for the whole day</h2>
+            <p data-i18n="dashLede">Open the dashboard from the menu bar or tray. It runs on your own computer at <code>localhost:26535</code> and pairs itself, so there is nothing to sign in to.</p>
+          </div>
+          <figure class="shot reveal">
+            <div class="frame sketch">
+              <picture>
+                <source media="(prefers-color-scheme: dark)" srcset="assets/dashboard-dark.jpg" />
+                <img src="assets/dashboard-light.jpg" width="1600" height="1075" loading="lazy" data-i18n-alt="dashAlt" alt="The Dopamine dashboard: 6h 45m of screen time, a 24-hour timeline of windows, hourly bars and a ring of categories" />
+              </picture>
+            </div>
+            <p class="note note-total" aria-hidden="true"><span data-i18n="noteTotal">compared with yesterday, up to the same time</span><svg viewBox="0 0 150 64"><path d="M144 8 C 90 8, 30 22, 8 58 M6 44 L8 58 L20 50" /></svg></p>
+            <p class="note note-timeline" aria-hidden="true"><span data-i18n="noteTimeline">every window, exactly when it was in front</span><svg viewBox="0 0 40 70"><path d="M10 66 C 6 40, 14 20, 30 6 M18 8 L30 6 L28 18" /></svg></p>
+          </figure>
+          <dl class="parts reveal">
+            <div><dt data-i18n="pTimeline">Timeline</dt><dd data-i18n="pTimelineD">A 24-hour strip of every window, plus hourly or daily stacked bars</dd></div>
+            <div><dt data-i18n="pApps">Apps and windows</dt><dd data-i18n="pAppsD">Time per app with its real icon, opening up to the windows and tabs inside it</dd></div>
+            <div><dt data-i18n="pSessions">Sessions</dt><dd data-i18n="pSessionsD">A log of uninterrupted stretches in each app</dd></div>
+            <div><dt data-i18n="pCats">Categories</dt><dd data-i18n="pCatsD">A ring of where the time went, and a picker to recategorise any app</dd></div>
+            <div><dt data-i18n="pNotes">Notes</dt><dd data-i18n="pNotesD">Longest focus stretch, best hour, biggest distraction, context switching</dd></div>
+            <div><dt data-i18n="pCal">Calendar</dt><dd data-i18n="pCalD">The month as paint dabs, from your lightest day to your heaviest</dd></div>
+            <div><dt data-i18n="pMenu">Menu bar and tray</dt><dd data-i18n="pMenuD">Today's total and top apps at a glance</dd></div>
+          </dl>
+        </section>
+
+        <section class="wrap section" aria-labelledby="why-title">
+          <div class="section-head reveal">
+            <h2 id="why-title" data-i18n="whyTitle">Honest numbers, no effort</h2>
+          </div>
+          <ul class="reasons">
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--cat-work)"></i><span data-i18n="r1">Zero effort</span></h3><p data-i18n="r1d">Nothing to start, stop or label. Time stops counting when you lock the screen, sleep, or leave the keyboard alone for five minutes.</p></li>
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--cat-study)"></i><span data-i18n="r2">Glances don't count</span></h3><p data-i18n="r2d">Windows in front for under five seconds are left out, a crashed session can't inflate a day, and today is compared with yesterday only up to the same time.</p></li>
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--cat-social)"></i><span data-i18n="r3">Categories that fit you</span></h3><p data-i18n="r3d">Work, study, social, entertainment and other are detected for you. Click a window to change it, for that one title or for every title containing some words, like a course code or a channel name.</p></li>
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--cat-entertainment)"></i><span data-i18n="r4">Forget, or pause</span></h3><p data-i18n="r4d">Erase a window or a session and its title is overwritten on disk. Pause for 15 minutes, an hour, until tomorrow, or until you resume, to keep something from being recorded at all.</p></li>
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--cat-other)"></i><span data-i18n="r5">Hide any app</span></h3><p data-i18n="r5d">Leave an app out of the numbers entirely. Dopamine's own windows are hidden from the start.</p></li>
+            <li class="reveal"><h3><i class="dab paint" style="background: var(--highlight)"></i><span data-i18n="r6">Light on your machine</span></h3><p data-i18n="r6d">A native menu bar or tray agent, one SQLite file, and a dashboard with no charting libraries that holds 60 fps. In English, 简体中文 and 繁體中文.</p></li>
+          </ul>
+        </section>
+
+        <section class="wrap section" aria-labelledby="cat-title">
+          <div class="section-head reveal">
+            <h2 id="cat-title" data-i18n="catTitle">How a category is decided</h2>
+            <p data-i18n="catLede">Dopamine looks at the evidence in this order and stops at the first answer.</p>
+          </div>
+          <ol class="evidence reveal">
+            <li><strong data-i18n="e1">Your own choice for the app</strong><span data-i18n="e1x">Discord counts as Study because you said so</span></li>
+            <li><strong data-i18n="e2">The site, for browsers</strong><span><code>Two Sum - LeetCode - Google Chrome</code> → <span data-i18n="study">Study</span></span></li>
+            <li><strong data-i18n="e3">The app, by name</strong><span><code>idea64</code>, <code>LeagueClientUx</code>, <code>WXWork</code></span></li>
+            <li><strong data-i18n="e4">Apps others agreed on</strong><span data-i18n="e4x">Only if you opted in, and only for apps the rules don't know</span></li>
+            <li><strong data-i18n="e5">What the app says about itself</strong><span data-i18n="e5x">The macOS App Store category; on Windows, the publisher and install path (<code>steamapps</code> means a game)</span></li>
+            <li><strong data-i18n="e6">The window title</strong><span data-i18n="e6x"><code>javaw</code> showing “Minecraft”</span></li>
+          </ol>
+          <p class="aside reveal" data-i18n="catAside">The rules live in one file shared by the dashboard and the macOS agent, and are checked against 115 real process names and tab titles. Categories are estimates: correct them in the dashboard when they're wrong.</p>
+        </section>
+
+        <section class="wrap section" id="privacy" aria-labelledby="privacy-title">
+          <div class="section-head reveal">
+            <h2 id="privacy-title" data-i18n="privTitle">Your activity never leaves your computer</h2>
+            <p data-i18n="privLede">Window titles, times and usage stay in a local SQLite database, served only to <code>localhost</code> behind a pairing code. There is no account to create.</p>
+          </div>
+          <div class="privacy">
+            <div class="col reveal">
+              <h3 data-i18n="privUpdTitle">A daily check for new versions</h3>
+              <p data-i18n="privUpd">Once a day the agent asks GitHub for the latest release. The request carries nothing about you or your activity, only the app version. Turn it off from the dashboard footer.</p>
+            </div>
+            <div class="col reveal">
+              <h3 data-i18n="privShareTitle">Sharing categories, only if you agree</h3>
+              <p data-i18n="privShare">The first time you pick a category for an app, the dashboard asks whether to share that choice so others benefit. If you agree, this is the complete request:</p>
+              <pre><code>{ <span class="k">"p_install"</span>: "&lt;random id for this install&gt;",
+  <span class="k">"p_app"</span>: "Discord",
+  <span class="k">"p_platform"</span>: "mac",
+  <span class="k">"p_category"</span>: "study" }</code></pre>
+              <p data-i18n="privShare2">Browser choices are never sent. Sharing isn't switched on in this release: no server is configured yet, so nothing is sent.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wrap section" id="download" aria-labelledby="dl-title">
+          <div class="section-head reveal">
+            <h2 id="dl-title" data-i18n="dlTitle">Start tracking</h2>
+            <p data-i18n="dlLede">The dashboard opens at <code>localhost:26535</code> and pairs itself. The menu shows a six-character pairing code if you ever need to connect by hand.</p>
+          </div>
+          <div class="platforms">
+            <div class="platform sketch reveal">
+              <h3 data-i18n="macTitle">macOS 12 or later</h3>
+              <ol>
+                <li data-i18n="mac1">Unzip <code>Dopamine-mac.zip</code> and move <code>Dopamine.app</code> to Applications.</li>
+                <li data-i18n="mac2">Open it. This early build isn't notarised, so macOS asks first: choose <strong>Open Anyway</strong> in System Settings → Privacy &amp; Security.</li>
+                <li data-i18n="mac3">Allow <strong>Accessibility</strong> access when asked, so Dopamine can read window titles. Without it, only app names are recorded.</li>
+                <li data-i18n="mac4">Click the hourglass in the menu bar, then <strong>Open Dashboard</strong>. Tick <strong>Open at login</strong> there to start with your Mac.</li>
+              </ol>
+              <a class="btn primary" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.zip"><span data-i18n="dlMac">Download for macOS</span></a>
+            </div>
+            <div class="platform sketch reveal">
+              <h3 data-i18n="winTitle">Windows 10 or later</h3>
+              <ol>
+                <li data-i18n="win1">Unzip <code>Dopamine-win.zip</code> anywhere and run <code>DopamineWin.exe</code>. No .NET installation is needed.</li>
+                <li data-i18n="win2">Right-click the tray icon (or double-click it) and choose <strong>Open Dashboard</strong>.</li>
+              </ol>
+              <a class="btn primary" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-win.zip"><span data-i18n="dlWin">Download for Windows</span></a>
+            </div>
+          </div>
+          <p class="aside reveal" data-i18n="early">This is an early release. If anything looks odd, <a href="https://github.com/TempestShaw/Dopamine/issues/new">open an issue</a> with your operating system and what you saw.</p>
+        </section>
+      </main>
+
+      <footer class="wrap">
+        <div class="rule"></div>
+        <div class="foot">
+          <span data-i18n="footLine">Dopamine · MIT license</span>
+          <nav aria-label="Project">
+            <a href="https://github.com/TempestShaw/Dopamine" data-i18n="footSource">Source code</a>
+            <a href="https://github.com/TempestShaw/Dopamine/releases" data-i18n="footReleases">All releases</a>
+            <a href="https://github.com/TempestShaw/Dopamine/issues" data-i18n="footIssues">Issues</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

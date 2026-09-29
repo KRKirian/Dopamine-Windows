@@ -1,0 +1,556 @@
+/*
+ * Dopamine intro page. Same sketchbook as the dashboard: paper and graphite for structure,
+ * saturated paints only where there is something to show.
+ */
+:root {
+  color-scheme: light;
+  --paper: #f4f1ea;
+  --paper-2: #ebe6db;
+  --ink: #221f1b;
+  --graphite: #6a645b;
+  --faint: #a19a8e;
+  --line: rgba(34, 31, 27, 0.2);
+  --wash: rgba(34, 31, 27, 0.06);
+  --highlight: #ffd23f;
+  --heat: #f7c948;
+  --cat-work: #2f6bff;
+  --cat-study: #4fb58a;
+  --cat-social: #e8799f;
+  --cat-entertainment: #eea062;
+  --cat-other: #b3a6dc;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .28 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --sans: "Figtree", ui-sans-serif, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", "Kaiti SC", STKaiti, KaiTi, cursive;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --measure: 1120px;
+  --gutter: clamp(20px, 5vw, 56px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #161512;
+    --paper-2: #211f1b;
+    --ink: #f1ece2;
+    --graphite: #aaa295;
+    --faint: #6f695f;
+    --line: rgba(241, 236, 226, 0.18);
+    --wash: rgba(241, 236, 226, 0.06);
+    --highlight: #ffd84f;
+    --heat: #b8994a;
+    --cat-work: #5b8cff;
+    --cat-study: #6cc79f;
+    --cat-social: #ec91b2;
+    --cat-entertainment: #f2b27a;
+    --cat-other: #c1b6e4;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .86 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+:lang(zh-TW) {
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Songti TC", "Noto Serif CJK TC", PMingLiU, serif;
+  --sans: "Figtree", ui-sans-serif, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", "Kaiti TC", BiauKai, DFKai-SB, cursive;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--paper) var(--grain);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:lang(zh) {
+  font-synthesis-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--wash);
+  padding: 0.08em 0.36em;
+  border-radius: 5px 4px 6px 3px;
+}
+
+:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.skip,
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip:focus {
+  width: auto;
+  height: auto;
+  clip-path: none;
+  left: 16px;
+  top: 12px;
+  z-index: 10;
+  background: var(--paper);
+  padding: 8px 12px;
+}
+
+/* ---------- Shared marks ---------- */
+
+.hand {
+  font-family: var(--hand);
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--graphite);
+}
+
+.marker {
+  white-space: nowrap;
+  background: linear-gradient(
+    100deg,
+    transparent 2%,
+    color-mix(in srgb, var(--highlight) 80%, transparent) 4%,
+    color-mix(in srgb, var(--highlight) 65%, transparent) 94%,
+    transparent 97%
+  );
+  background-size: 100% 38%;
+  background-position: 0 86%;
+  background-repeat: no-repeat;
+  padding-inline: 0.08em;
+}
+
+.paint {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5 .035' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.5 1.12'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23s)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5 .035' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.5 1.12'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23s)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 160px 160px;
+  mask-size: 160px 160px;
+}
+
+.dab {
+  border-radius: 48% 52% 45% 55% / 55% 44% 56% 45%;
+}
+
+.sketch {
+  position: relative;
+}
+.sketch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.4px solid var(--line);
+  border-radius: 14px 9px 16px 8px / 8px 15px 9px 14px;
+  pointer-events: none;
+}
+
+.rule {
+  height: 4px;
+  background: var(--line);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='4'%3E%3Cpath d='M0 2C40 .9 80 3.1 120 2S200 .9 240 2' stroke='black' stroke-width='1.4' fill='none'/%3E%3C/svg%3E") repeat-x 0 0 / 240px 4px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='4'%3E%3Cpath d='M0 2C40 .9 80 3.1 120 2S200 .9 240 2' stroke='black' stroke-width='1.4' fill='none'/%3E%3C/svg%3E") repeat-x 0 0 / 240px 4px;
+}
+
+.wrap {
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- Header ---------- */
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 22px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font: italic 400 30px/1 var(--serif);
+}
+.brand img {
+  width: 40px;
+  height: 40px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.4vw, 28px);
+  font-size: 15px;
+  color: var(--graphite);
+}
+.nav a {
+  text-decoration: none;
+}
+.nav a:hover {
+  color: var(--ink);
+}
+
+.langs {
+  display: flex;
+  gap: 2px;
+  font-size: 13px;
+}
+.langs button {
+  font: inherit;
+  color: var(--graphite);
+  background: none;
+  border: 0;
+  padding: 4px 7px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.langs button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--wash);
+}
+
+@media (max-width: 760px) {
+  .nav .nav-link {
+    display: none;
+  }
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  padding-top: clamp(28px, 7vw, 88px);
+  display: grid;
+  gap: 26px;
+}
+
+:lang(zh) .eyebrow {
+  font-size: 20px;
+}
+.eyebrow {
+  font-size: 26px;
+  color: var(--graphite);
+  line-height: 1;
+  transform: rotate(-1.5deg);
+  transform-origin: left;
+}
+
+.hero h1 {
+  font-size: clamp(46px, 7.4vw, 104px);
+  line-height: 0.96;
+  max-width: 15ch;
+}
+
+.hero-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 20px clamp(28px, 5vw, 72px);
+  align-items: end;
+}
+.hero-foot .ctas {
+  justify-content: flex-end;
+}
+@media (max-width: 900px) {
+  .hero-foot {
+    grid-template-columns: 1fr;
+  }
+  .hero-foot .ctas {
+    justify-content: flex-start;
+  }
+}
+:lang(zh) .hero h1 {
+  line-height: 1.12;
+  max-width: 11em;
+  font-size: clamp(40px, 7vw, 88px);
+}
+
+.lede {
+  max-width: 40em;
+  font-size: clamp(17px, 1.8vw, 20px);
+  color: var(--graphite);
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px 12px;
+  font: 600 16px/1 var(--sans);
+  text-decoration: none;
+  color: var(--ink);
+  border: 1.6px solid var(--ink);
+  border-radius: 14px 9px 16px 8px / 8px 15px 9px 14px;
+  transition: transform 160ms ease, background 160ms ease;
+}
+.btn:hover {
+  transform: translateY(-2px) rotate(-0.5deg);
+}
+.btn.primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.meta {
+  flex-basis: 100%;
+  text-align: inherit;
+  font-size: 14px;
+  color: var(--faint);
+}
+.hero-foot .meta {
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .hero-foot .meta {
+    text-align: left;
+  }
+}
+
+/* ---------- Film ---------- */
+
+.film-section {
+  padding-top: clamp(32px, 4.5vw, 56px);
+}
+
+.film-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.film-head .hand {
+  font-size: 24px;
+  color: var(--graphite);
+}
+:lang(zh) .film-head .hand {
+  font-size: 19px;
+}
+.film-head a {
+  flex: none;
+  font-size: 14px;
+  color: var(--graphite);
+}
+
+/* On narrow screens the stage is too small for its captions; they move below it. */
+.film-caption {
+  display: none;
+  min-height: 3.2em;
+  margin: 12px 4px 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+@media (max-width: 760px) {
+  .film-caption {
+    display: block;
+  }
+  .film .f-caption {
+    display: none;
+  }
+}
+
+.film {
+  padding: 10px;
+}
+
+.viewport {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px 8px 14px 7px / 7px 13px 8px 12px;
+  cursor: pointer;
+  container-type: inline-size;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 6px 4px;
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1.6px solid var(--ink);
+  border-radius: 48% 52% 45% 55% / 55% 44% 56% 45%;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.play svg {
+  width: 16px;
+  height: 16px;
+}
+
+.track {
+  position: relative;
+  height: 44px;
+  cursor: pointer;
+  touch-action: none;
+}
+.track-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 6px;
+  background: var(--wash);
+  border-radius: 6px;
+}
+.track-fill {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  height: 6px;
+  width: 0;
+  background: var(--ink);
+  border-radius: 6px;
+}
+.chapters {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chapters li {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+.chapters button {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  font: 500 12px/1.2 var(--sans);
+  color: var(--faint);
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chapters li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 1.4px;
+  height: 14px;
+  background: var(--graphite);
+  opacity: 0.5;
+}
+.chapters li.is-current button {
+  color: var(--ink);
+}
+.time {
+  font: 500 13px/1 var(--sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--graphite);
+  min-width: 84px;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .chapters button {
+    display: none;
+  }
+  .track {
+    height: 30px;
+  }
+}
+
+/* Scroll reveal: only when JS has marked the page, so nothing is hidden without it. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 600ms ease, transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .btn,
+  .btn:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Recording mode: only the stage, at its native size. */
+.record body {
+  background: var(--paper);
+}
+.record .page {
+  visibility: hidden;
+}
+.record .viewport {
+  visibility: visible;
+}

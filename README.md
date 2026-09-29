@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://tempestshaw.github.io/Dopamine/">Website</a> ·
   <a href="https://github.com/TempestShaw/Dopamine/releases/latest">Download</a> ·
   <a href="#start-tracking">Quick Start</a> ·
   <a href="#privacy">Privacy</a> ·
@@ -32,6 +33,8 @@ Dopamine is a small screen-time tracker for macOS and Windows. It notes which ap
     <img src="assets/dashboard-light.png" alt="Dopamine dashboard showing a day of screen time: totals, a 24-hour timeline and categories" width="900">
   </picture>
 </p>
+
+<p align="center"><a href="https://tempestshaw.github.io/Dopamine/#film">▶ Watch the 48-second tour</a> of a day with Dopamine, in English, 简体中文 or 繁體中文.</p>
 
 ## Start tracking
 

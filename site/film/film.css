@@ -1,0 +1,579 @@
+/*
+ * The explainer film. Everything is laid out on a fixed 1280 × 720 stage that is scaled to fit,
+ * and every frame is a pure function of time, so the same code plays on the page and renders
+ * the video file frame by frame.
+ */
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  transform: scale(var(--s, 1));
+  transform-origin: 0 0;
+  background: var(--paper) var(--grain);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+  user-select: none;
+}
+
+.stage > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: opacity, transform;
+}
+
+.f-hand {
+  font-family: var(--hand);
+  color: var(--graphite);
+}
+
+.f-serif {
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+/* ----- Title card and finale ----- */
+.f-logo {
+  width: 240px;
+  height: 240px;
+}
+.f-logo span {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .f-logo span {
+    mix-blend-mode: screen;
+  }
+}
+.f-word {
+  font: 400 96px/1 var(--serif);
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+.f-tag {
+  font-size: 44px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ----- The computer ----- */
+.f-screen {
+  left: 250px;
+  top: 40px;
+  width: 780px;
+  height: 410px;
+  border: 2px solid var(--ink);
+  border-radius: 18px 12px 20px 10px / 10px 18px 12px 18px;
+  background: color-mix(in srgb, var(--paper-2) 55%, var(--paper));
+  overflow: hidden;
+}
+.f-menubar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 0 18px;
+  border-bottom: 1.4px solid var(--line);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--paper);
+  z-index: 50;
+}
+.f-menubar .f-apple {
+  margin-right: auto;
+  display: flex;
+  gap: 16px;
+  font-weight: 500;
+  color: var(--graphite);
+}
+.f-glass {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 8px;
+  border-radius: 7px;
+}
+.f-glass svg {
+  width: 14px;
+  height: 16px;
+}
+
+.f-win {
+  position: absolute;
+  width: 520px;
+  height: 300px;
+  background: var(--paper);
+  border: 1.6px solid var(--ink);
+  border-radius: 12px 9px 13px 8px / 8px 12px 9px 13px;
+  overflow: hidden;
+  box-shadow: 0 16px 34px -18px rgba(34, 31, 27, 0.45);
+}
+.f-bar {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1.4px solid var(--line);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--paper-2);
+  white-space: nowrap;
+}
+.f-dots {
+  display: flex;
+  gap: 6px;
+}
+.f-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.4px solid var(--graphite);
+}
+.f-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.f-body {
+  position: absolute;
+  inset: 34px 0 0 0;
+  padding: 18px 20px;
+}
+.f-line {
+  height: 9px;
+  border-radius: 5px;
+  margin-bottom: 11px;
+  background: var(--line);
+}
+.f-dim {
+  position: absolute;
+  inset: 0;
+  /* A locked screen is dark in either theme. */
+  background: rgba(22, 21, 18, 0.86);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  color: #f4f1ea;
+}
+.f-dim svg {
+  width: 54px;
+  height: 64px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+/* ----- Timeline strip ----- */
+.f-clock {
+  font-size: 40px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.f-clock small {
+  display: block;
+  font-size: 24px;
+  color: var(--faint);
+}
+.f-strip {
+  left: 140px;
+  top: 536px;
+  width: 1000px;
+  height: 64px;
+}
+.f-base {
+  position: absolute;
+  transform-origin: left;
+  left: 0;
+  right: 0;
+  top: 22px;
+}
+.f-ticks span {
+  position: absolute;
+  top: 50px;
+  transform: translateX(-50%);
+  font-size: 13px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.f-seg {
+  position: absolute;
+  top: 0;
+  height: 46px;
+}
+.f-seg b,
+.f-seg u {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+}
+/* Before it has a category, a stretch is a graphite pencil hatch. */
+.f-seg b {
+  background: repeating-linear-gradient(
+    -62deg,
+    color-mix(in srgb, var(--graphite) 70%, transparent) 0 1.6px,
+    transparent 1.6px 5px
+  );
+}
+.f-seg b {
+  border: 1.4px solid color-mix(in srgb, var(--graphite) 80%, transparent);
+}
+.f-seg u {
+  opacity: 0;
+}
+.f-glance {
+  position: absolute;
+  top: -10px;
+  width: 3px;
+  height: 66px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+.f-bracket {
+  top: 470px;
+  height: 58px;
+}
+.f-bracket svg {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 22px;
+  stroke: var(--graphite);
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.f-bracket span {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 30px;
+  white-space: nowrap;
+}
+
+/* ----- Annotations ----- */
+.f-note {
+  font-size: 30px;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.f-note svg {
+  position: absolute;
+  overflow: visible;
+  stroke: var(--graphite);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ----- Categories ----- */
+.f-chips {
+  left: 70px;
+  top: 150px;
+  width: 700px;
+}
+.f-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 58px;
+  margin-bottom: 16px;
+  font-size: 19px;
+}
+.f-chip .f-title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.4px solid var(--line);
+  border-radius: 10px 8px 12px 7px / 7px 11px 8px 12px;
+  background: var(--paper);
+  white-space: nowrap;
+}
+.f-chip svg {
+  width: 56px;
+  height: 16px;
+  stroke: var(--graphite);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.f-chip > .f-hand {
+  white-space: nowrap;
+}
+.f-cat {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.f-cat i {
+  width: 16px;
+  height: 16px;
+}
+.f-pick {
+  left: 556px;
+  top: 346px;
+  width: 196px;
+  padding: 8px;
+  background: var(--paper);
+  border: 1.6px solid var(--ink);
+  border-radius: 12px 9px 13px 8px / 8px 12px 9px 13px;
+  box-shadow: 0 16px 30px -18px rgba(34, 31, 27, 0.5);
+  font-size: 16px;
+}
+.f-pick div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+.f-pick i {
+  width: 13px;
+  height: 13px;
+}
+.f-cursor {
+  width: 26px;
+  height: 30px;
+  z-index: 80;
+}
+
+.f-ring {
+  left: 850px;
+  top: 96px;
+  width: 340px;
+  height: 340px;
+}
+.f-ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.f-ring .f-total {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.f-total strong {
+  font: 400 60px/1 var(--serif);
+  font-variant-numeric: tabular-nums;
+}
+.f-total span {
+  font-size: 26px;
+}
+
+/* ----- Privacy ----- */
+.f-box {
+  left: 190px;
+  top: 190px;
+  width: 440px;
+  height: 300px;
+  border: 2px solid var(--ink);
+  border-radius: 18px 12px 20px 10px / 10px 18px 12px 18px;
+  background: color-mix(in srgb, var(--paper-2) 55%, var(--paper));
+}
+.f-box .f-hand {
+  position: absolute;
+  left: 22px;
+  top: 12px;
+  font-size: 32px;
+}
+.f-db {
+  position: absolute;
+  left: 150px;
+  top: 92px;
+  width: 140px;
+  height: 160px;
+}
+.f-db svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: var(--paper);
+}
+.f-db span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -34px;
+  text-align: center;
+  font: 500 16px var(--mono);
+}
+.f-row {
+  height: 14px;
+  border-radius: 4px;
+}
+.f-cloud {
+  left: 800px;
+  top: 210px;
+  width: 300px;
+  height: 200px;
+}
+.f-cloud svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 7 9;
+}
+.f-cross {
+  left: 690px;
+  top: 290px;
+  width: 80px;
+  height: 80px;
+}
+.f-cross svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke: var(--cat-social);
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+}
+.f-wire {
+  left: 632px;
+  top: 330px;
+  width: 170px;
+  height: 4px;
+}
+.f-wire svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke: var(--graphite);
+  stroke-width: 2;
+  stroke-dasharray: 6 8;
+}
+
+/* ----- Month ----- */
+.f-month {
+  left: 380px;
+  top: 64px;
+  width: 520px;
+}
+.f-month h4 {
+  margin: 0 0 14px;
+  font: 400 52px/1 var(--serif);
+  text-align: center;
+}
+.f-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.f-grid > div {
+  position: relative;
+  aspect-ratio: 1.3;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--graphite);
+}
+.f-grid > div i {
+  position: absolute;
+  inset: 3px;
+}
+.f-grid > div span {
+  position: relative;
+}
+.f-grid .f-wd {
+  aspect-ratio: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--faint);
+}
+
+/* ----- Captions ----- */
+.f-caption {
+  z-index: 90;
+  left: 0;
+  right: 0;
+  top: 640px;
+  display: flex;
+  justify-content: center;
+}
+.f-caption p {
+  margin: 0;
+  max-width: 1080px;
+  padding: 8px 18px;
+  font-size: 27px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  border-radius: 10px;
+}
+
+/* ----- Poster overlay (play button over the first frame) ----- */
+.f-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.f-poster span {
+  display: grid;
+  place-items: center;
+  width: clamp(56px, 11cqw, 96px);
+  height: clamp(56px, 11cqw, 96px);
+  border-radius: 48% 52% 45% 55% / 55% 44% 56% 45%;
+  background: var(--ink);
+  color: var(--paper);
+}
+.f-poster svg {
+  width: 36%;
+  height: 36%;
+  margin-left: 6%;
+}
+.is-playing .f-poster,
+.has-played .f-poster {
+  opacity: 0;
+}
+
+/* Recording: the stage alone, at native size. */
+.record .viewport {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  border-radius: 0;
+  z-index: 100;
+}
+.record .f-poster {
+  display: none;
+}

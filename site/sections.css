@@ -1,0 +1,272 @@
+/* The page sections below the film: dashboard, reasons, categories, privacy, download, footer. */
+
+/* ---------- Sections ---------- */
+
+.section {
+  padding-top: clamp(72px, 11vw, 140px);
+}
+
+.section-head {
+  display: grid;
+  gap: 14px;
+  max-width: 44em;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+.section-head h2 {
+  font-size: clamp(36px, 5.2vw, 64px);
+  line-height: 1;
+}
+:lang(zh) .section-head h2 {
+  line-height: 1.2;
+}
+.section-head p {
+  color: var(--graphite);
+  font-size: 18px;
+}
+
+/* Dashboard shot with margin notes */
+.shot {
+  position: relative;
+  margin: 0;
+}
+.shot picture,
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px 9px 16px 8px / 8px 15px 9px 14px;
+}
+.shot .frame {
+  padding: 10px;
+}
+.note {
+  position: absolute;
+  margin: 0;
+  font: 500 22px/1.05 var(--hand);
+  color: var(--graphite);
+  width: 12em;
+  pointer-events: none;
+}
+.note svg {
+  position: absolute;
+  overflow: visible;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+/* Positions are fractions of the screenshot, so the notes stay on their targets as it scales. */
+.note-total {
+  left: 30%;
+  top: 13%;
+  width: 20em;
+}
+.note-total svg {
+  left: -150px;
+  top: 14px;
+  width: 150px;
+  height: 64px;
+}
+.note-timeline {
+  left: 50%;
+  top: 55%;
+  width: 10em;
+}
+.note-timeline svg {
+  left: 60px;
+  top: -70px;
+  width: 40px;
+  height: 70px;
+}
+@media (max-width: 900px) {
+  .note {
+    display: none;
+  }
+}
+
+.parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  gap: 0 56px;
+  margin: 40px 0 0;
+}
+.parts div {
+  display: grid;
+  grid-template-columns: 10em 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.parts dt {
+  font-weight: 600;
+}
+.parts dd {
+  margin: 0;
+  color: var(--graphite);
+}
+
+/* Reasons */
+.reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: clamp(28px, 4vw, 44px) clamp(28px, 5vw, 64px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reasons li {
+  display: grid;
+  gap: 8px;
+}
+.reasons h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.reasons h3 .dab {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.reasons p {
+  color: var(--graphite);
+}
+
+/* Evidence order */
+.evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: ev;
+  max-width: 900px;
+}
+.evidence li {
+  counter-increment: ev;
+  display: grid;
+  grid-template-columns: 3.2em 1fr 1.3fr;
+  gap: 8px 20px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.evidence li::before {
+  content: counter(ev);
+  font: 400 34px/1 var(--serif);
+  color: var(--faint);
+}
+.evidence strong {
+  font-weight: 600;
+}
+.evidence span {
+  color: var(--graphite);
+}
+@media (max-width: 640px) {
+  .evidence li {
+    grid-template-columns: 2.4em 1fr;
+  }
+  .evidence span {
+    grid-column: 2;
+  }
+}
+.aside {
+  margin-top: 22px;
+  max-width: 44em;
+  color: var(--graphite);
+  font-size: 15px;
+}
+
+/* Privacy */
+.privacy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .privacy {
+    grid-template-columns: 1fr;
+  }
+}
+.privacy .col {
+  display: grid;
+  gap: 18px;
+}
+.privacy h3 {
+  font-size: 28px;
+}
+.privacy p {
+  color: var(--graphite);
+}
+pre {
+  margin: 0;
+  padding: 18px 20px;
+  font: 13.5px/1.7 var(--mono);
+  background: var(--wash);
+  border-radius: 12px 8px 14px 7px / 7px 13px 8px 12px;
+  overflow-x: auto;
+  white-space: pre;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+pre .k {
+  color: var(--graphite);
+}
+
+/* Download */
+.platforms {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 3vw, 36px);
+}
+@media (max-width: 860px) {
+  .platforms {
+    grid-template-columns: 1fr;
+  }
+}
+.platform {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  padding: clamp(22px, 3vw, 34px);
+}
+.platform h3 {
+  font-size: 34px;
+}
+.platform ol {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 10px;
+  color: var(--graphite);
+}
+.platform ol ::marker {
+  font-family: var(--serif);
+  color: var(--ink);
+}
+.platform .btn {
+  justify-self: start;
+}
+
+/* Footer */
+footer.wrap {
+  margin-top: clamp(80px, 12vw, 150px);
+}
+.foot {
+  padding-block: 28px 44px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--graphite);
+  font-size: 14px;
+}
+.foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}

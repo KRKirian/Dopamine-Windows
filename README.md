@@ -4,7 +4,7 @@
 
 <h1 align="center">Dopamine</h1>
 
-<p align="center">See where your hours went, without lifting a finger.</p>
+<p align="center">Know where your time goes.</p>
 
 <p align="center">
   <strong>English</strong> | <a href="README.zh-CN.md" lang="zh-CN">简体中文</a>

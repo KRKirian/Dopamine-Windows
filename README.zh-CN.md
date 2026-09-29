@@ -4,7 +4,7 @@
 
 <h1 align="center">Dopamine</h1>
 
-<p align="center">什么都不用做，就能看清时间都去哪了。</p>
+<p align="center">你的自动时间管理助理。</p>
 
 <p align="center">
   <a href="README.md" lang="en">English</a> | <strong>简体中文</strong>

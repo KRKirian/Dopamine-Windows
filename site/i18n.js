@@ -6,7 +6,7 @@ const zhCN = {
   navPrivacy: "隐私",
   navDownload: "下载",
   eyebrow: "适用于 macOS 和 Windows 的屏幕时间记录",
-  headline: "什么都不用做，就能看清<span class=\"marker\">时间</span>都去哪了。",
+  headline: "你的自动<span class=\"marker\">时间</span>管理助理",
   lede: "Dopamine 记下每一刻在最前面的是哪个 App、哪个窗口，数据只存在你自己的电脑上，再把一天画成时间轴、按 App 和窗口的明细，以及一整月的颜料点日历。锁屏、睡眠或离开电脑时，它会自动暂停。",
   dlMac: "下载 macOS 版",
   dlWin: "下载 Windows 版",
@@ -82,7 +82,7 @@ const zhCN = {
   footSource: "源代码",
   footReleases: "所有版本",
   footIssues: "问题反馈",
-  title: "Dopamine：看清时间都去哪了",
+  title: "Dopamine：你的自动时间管理助理",
 };
 
 const zhTW = {
@@ -92,7 +92,7 @@ const zhTW = {
   navPrivacy: "隱私",
   navDownload: "下載",
   eyebrow: "適用於 macOS 和 Windows 的螢幕使用時間記錄",
-  headline: "什麼都不用做，就能看清<span class=\"marker\">時間</span>都去哪了。",
+  headline: "你的自動<span class=\"marker\">時間</span>管理助理",
   lede: "Dopamine 記下每一刻在最前面的是哪個 App、哪個視窗，資料只存在你自己的電腦上，再把一天畫成時間軸、按 App 和視窗的明細，以及一整個月的顏料點日曆。鎖定螢幕、睡眠或離開電腦時，它會自動暫停。",
   dlMac: "下載 macOS 版",
   dlWin: "下載 Windows 版",
@@ -168,7 +168,7 @@ const zhTW = {
   footSource: "原始碼",
   footReleases: "所有版本",
   footIssues: "問題回報",
-  title: "Dopamine：看清時間都去哪了",
+  title: "Dopamine：你的自動時間管理助理",
 };
 
 export const PAGE_STRINGS = { "zh-CN": zhCN, "zh-TW": zhTW };

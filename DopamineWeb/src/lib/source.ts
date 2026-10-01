@@ -1,6 +1,5 @@
 import { AGENT_PROCESS, FORGOTTEN_TITLE, MAX_SEGMENT, RawEvent } from "./analytics";
 import { AppHint, Category, Overrides, TitleRule, sanitizeTitleRules } from "./categories";
-import { Sharing } from "./community";
 import { Range, addMonths, startOfMonth } from "./time";
 
 export const DEFAULT_PORT = 26535;
@@ -46,7 +45,7 @@ export interface DataSource {
   fetchEvents(fromSec: number, toSec: number): Promise<RawEvent[]>;
   /** Icon and metadata keyed by raw process name. Apps the agent knows nothing about are left out. */
   fetchApps(processNames: string[]): Promise<Record<string, AppInfo>>;
-  /** The user's category choices and sharing preference, kept by the agent. */
+  /** The user's category choices, kept by the agent. */
   loadPreferences(): Promise<Preferences>;
   savePreferences(change: Partial<Preferences>): Promise<void>;
   /** A newer release, if the agent knows of one. */
@@ -58,10 +57,6 @@ export interface DataSource {
 export interface Preferences {
   /** Category chosen per app; the menu bar reads these too. */
   overrides: Overrides;
-  /** Whether choices are shared with the community ("ask" until the user decides). */
-  sharing: Sharing;
-  /** Random id sent with shared choices so one install counts once. Created when sharing is turned on. */
-  installId?: string;
   /** Process names left out of every figure (Dopamine itself by default). */
   hidden: string[];
   /** The user's per-window category rules; they beat the per-app choice. */
@@ -82,16 +77,13 @@ export function hiddenKey(process: string): string {
 
 /** Agent settings JSON ⇄ Preferences. */
 export function preferencesFromSettings(
-  s: { categoryOverrides?: Record<string, string>; communitySharing?: string; installId?: string; hiddenApps?: unknown; titleRules?: unknown; checkForUpdates?: unknown },
+  s: { categoryOverrides?: Record<string, string>; hiddenApps?: unknown; titleRules?: unknown; checkForUpdates?: unknown },
   platform: Platform,
 ): Preferences {
-  const sharing = s.communitySharing === "on" || s.communitySharing === "off" ? s.communitySharing : "ask";
   // Agents from before hiding existed send no list at all; an empty list means "hide nothing".
   const hidden = Array.isArray(s.hiddenApps) ? s.hiddenApps.filter((p): p is string => typeof p === "string" && p.length > 0) : defaultHidden(platform);
   return {
     overrides: sanitizeOverrides(s.categoryOverrides),
-    sharing,
-    installId: s.installId || undefined,
     hidden,
     titleRules: sanitizeTitleRules(s.titleRules),
     checkUpdates: s.checkForUpdates !== false,
@@ -101,8 +93,6 @@ export function preferencesFromSettings(
 export function settingsFromPreferences(p: Partial<Preferences>) {
   return {
     ...(p.overrides && { categoryOverrides: p.overrides }),
-    ...(p.sharing && { communitySharing: p.sharing }),
-    ...(p.installId && { installId: p.installId }),
     ...(p.hidden && { hiddenApps: p.hidden }),
     ...(p.titleRules && { titleRules: p.titleRules }),
     ...(p.checkUpdates !== undefined && { checkForUpdates: p.checkUpdates }),

@@ -14,7 +14,7 @@ class FakeSource implements DataSource {
     return {};
   }
   async loadPreferences(): Promise<Preferences> {
-    return { overrides: {}, sharing: "ask", hidden: [], titleRules: [], checkUpdates: true };
+    return { overrides: {}, hidden: [], titleRules: [], checkUpdates: true };
   }
   async fetchUpdate() {
     return null;

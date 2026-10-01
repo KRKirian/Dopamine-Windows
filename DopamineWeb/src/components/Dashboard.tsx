@@ -37,7 +37,6 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
     update,
     checkUpdates,
     setCheckUpdates,
-    sharing,
   } = useDashboard(store, view, anchor, onDisconnect);
 
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor]);
@@ -109,7 +108,6 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
                   view={view}
                   overrides={overrides}
                   onOverride={setOverride}
-                  sharing={sharing}
                   hidden={hidden}
                   onHide={setHidden}
                   onForgetTitle={forgetTitle}
@@ -128,12 +126,7 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
         )}
 
         <footer className="hand mt-16 flex flex-col items-center gap-1 text-center text-lg text-faint">
-          <span>{sharing.state === "on" ? t.footer.sharing : t.footer.local}</span>
-          {sharing.available && sharing.state !== "ask" && (
-            <button type="button" onClick={() => sharing.set(sharing.state === "on" ? "off" : "on")} className="text-base underline decoration-line underline-offset-4 hover:text-graphite">
-              {sharing.state === "on" ? t.footer.stop : t.footer.start}
-            </button>
-          )}
+          <span>{t.footer.local}</span>
           {store.source.platform !== "demo" && (
             <button type="button" onClick={() => setCheckUpdates(!checkUpdates)} className="text-base underline decoration-line underline-offset-4 hover:text-graphite">
               {checkUpdates ? t.footer.updatesOn : t.footer.updatesOff}

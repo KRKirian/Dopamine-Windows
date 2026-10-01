@@ -44,9 +44,6 @@ const en = {
   },
   footer: {
     local: "everything stays on this computer",
-    sharing: "your activity stays on this computer; only app categories you pick are shared",
-    stop: "stop sharing category choices",
-    start: "share category choices to help others",
     updatesOn: "looks for a new version on GitHub once a day · turn off",
     updatesOff: "update checks are off · turn on",
   },
@@ -135,15 +132,6 @@ const en = {
     yes: "forget",
     no: "keep",
   },
-  share: {
-    ask: (app: ReactNode) => ["Share this choice so Dopamine recognises ", app, " for other people too?"],
-    everything: "This is everything that would be sent, now and for later choices. No window titles, no times, no usage:",
-    yes: "Share anonymously",
-    no: "Keep it on this computer",
-    code: "read the code →",
-    demo: "sample data: nothing is sent either way",
-    installId: "<random id for this install>",
-  },
   pair: {
     title: ["Rediscover", "your time."],
     intro: "Dopamine notes which window is in front, keeps it on your computer, and shows you where the hours went.",
@@ -188,9 +176,6 @@ const zhCN: Dict = {
   },
   footer: {
     local: "所有数据都只留在这台电脑上",
-    sharing: "你的活动只留在这台电脑上，只会分享你选定的应用分类",
-    stop: "停止分享分类选择",
-    start: "分享分类选择，帮助其他人",
     updatesOn: "每天在 GitHub 上检查一次新版本 · 关闭",
     updatesOff: "已关闭更新检查 · 打开",
   },
@@ -279,15 +264,6 @@ const zhCN: Dict = {
     yes: "删除",
     no: "保留",
   },
-  share: {
-    ask: (app) => ["要分享这个选择，让 Dopamine 也能帮其他人认出 ", app, " 吗？"],
-    everything: "以下就是会发送的全部内容，现在和以后的选择都一样。不含窗口标题、时间或使用情况：",
-    yes: "匿名分享",
-    no: "只留在这台电脑上",
-    code: "查看代码 →",
-    demo: "示例数据：无论怎么选都不会发送",
-    installId: "<这台电脑的随机 ID>",
-  },
   pair: {
     title: ["重新发现", "你的时间。"],
     intro: "Dopamine 记录哪个窗口在最前面，数据只存在你的电脑上，然后告诉你时间都去哪了。",
@@ -330,9 +306,6 @@ const zhTW: Dict = {
   },
   footer: {
     local: "所有資料都只留在這台電腦上",
-    sharing: "你的活動只留在這台電腦上，只會分享你選定的應用程式分類",
-    stop: "停止分享分類選擇",
-    start: "分享分類選擇，幫助其他人",
     updatesOn: "每天在 GitHub 上檢查一次新版本 · 關閉",
     updatesOff: "已關閉更新檢查 · 開啟",
   },
@@ -420,15 +393,6 @@ const zhTW: Dict = {
     ask: "永久刪除？標題會被抹掉，時間也不再計入。無法復原。",
     yes: "刪除",
     no: "保留",
-  },
-  share: {
-    ask: (app) => ["要分享這個選擇，讓 Dopamine 也能幫其他人認出 ", app, " 嗎？"],
-    everything: "以下就是會傳送的全部內容，現在和以後的選擇都一樣。不含視窗標題、時間或使用情況：",
-    yes: "匿名分享",
-    no: "只留在這台電腦上",
-    code: "查看程式碼 →",
-    demo: "範例資料：無論怎麼選都不會傳送",
-    installId: "<這台電腦的隨機 ID>",
   },
   pair: {
     title: ["重新發現", "你的時間。"],

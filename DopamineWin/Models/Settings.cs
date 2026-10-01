@@ -15,11 +15,7 @@ public sealed class StoredSettings
     /// <summary>The user's category choices, keyed by process name ("work", "study", …).</summary>
     public Dictionary<string, string> CategoryOverrides { get; set; } = new();
 
-    /// <summary>"ask", "on" or "off": whether category choices are shared (decided in the dashboard).</summary>
-    public string CommunitySharing { get; set; } = "ask";
 
-    /// <summary>Random id sent with shared choices so one install counts once. Empty until sharing is on.</summary>
-    public string InstallId { get; set; } = string.Empty;
 
     /// <summary>Process names left out of every figure. Null until the user changes it, meaning <see cref="DefaultHidden"/>.</summary>
     public List<string>? HiddenApps { get; set; }
@@ -36,7 +32,6 @@ public sealed class StoredSettings
     public IReadOnlyList<string> Hidden => HiddenApps ?? [.. DefaultHidden];
 
     private static readonly HashSet<string> Categories = ["work", "study", "social", "entertainment", "other"];
-    private static readonly HashSet<string> SharingStates = ["ask", "on", "off"];
 
     public void Apply(SettingsPatch patch)
     {
@@ -44,8 +39,6 @@ public sealed class StoredSettings
         if (patch.IdleTimeout is { } idle) IdleTimeout = Math.Clamp(idle, 0, 7200);
         if (patch.CategoryOverrides != null)
             CategoryOverrides = patch.CategoryOverrides.Where(p => Categories.Contains(p.Value)).ToDictionary(p => p.Key, p => p.Value);
-        if (patch.CommunitySharing != null && SharingStates.Contains(patch.CommunitySharing)) CommunitySharing = patch.CommunitySharing;
-        if (patch.InstallId != null && Guid.TryParse(patch.InstallId, out _)) InstallId = patch.InstallId;
         if (patch.HiddenApps != null)
             HiddenApps = patch.HiddenApps.Where(p => !string.IsNullOrEmpty(p) && p.Length <= 256).Take(500).ToList();
         if (patch.TitleRules != null)
@@ -64,8 +57,6 @@ public sealed class StoredSettings
         TrackingInterval = TrackingInterval,
         IdleTimeout = IdleTimeout,
         CategoryOverrides = CategoryOverrides,
-        CommunitySharing = CommunitySharing,
-        InstallId = string.IsNullOrEmpty(InstallId) ? null : InstallId,
         HiddenApps = [.. Hidden],
         TitleRules = TitleRules,
         CheckForUpdates = CheckForUpdates,
@@ -78,8 +69,6 @@ public sealed class SettingsPatch
     public int? TrackingInterval { get; set; }
     public int? IdleTimeout { get; set; }
     public Dictionary<string, string>? CategoryOverrides { get; set; }
-    public string? CommunitySharing { get; set; }
-    public string? InstallId { get; set; }
     public List<string>? HiddenApps { get; set; }
     public List<TitleRule>? TitleRules { get; set; }
     public bool? CheckForUpdates { get; set; }
@@ -101,8 +90,6 @@ public sealed class PublicSettings
     public int TrackingInterval { get; set; }
     public int IdleTimeout { get; set; }
     public Dictionary<string, string> CategoryOverrides { get; set; } = new();
-    public string CommunitySharing { get; set; } = "ask";
-    public string? InstallId { get; set; }
     public List<string> HiddenApps { get; set; } = [];
     public List<TitleRule> TitleRules { get; set; } = [];
     public bool CheckForUpdates { get; set; } = true;

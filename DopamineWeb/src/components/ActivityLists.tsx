@@ -3,25 +3,15 @@
 import { useState } from "react";
 import { AppStat, Session } from "@/lib/analytics";
 import { BROWSER_SCOPE, CATEGORIES, CATEGORY_META, Category, MAX_RULE_TEXT, Overrides, TitleRule, displayApp, isBrowser, titleRuleFor } from "@/lib/categories";
-import { Sharing, votePayload } from "@/lib/community";
 import { useT } from "@/lib/i18n";
 import { MINUTE, View, clock, formatDuration, shortDate } from "@/lib/time";
 import { AppAvatar, CategoryDot, ChevronDown, EmptyState, EyeOff, Section, Segmented, Trash } from "./ui";
 
 type Tab = "apps" | "sessions";
 
-export interface SharingState {
-  available: boolean;
-  state: Sharing;
-  pending: { process: string; category: Category } | null;
-  set: (s: "on" | "off") => void;
-  isDemo: boolean;
-}
-
 type OverrideProps = {
   overrides: Overrides;
   onOverride: (process: string, category: Category | null) => void;
-  sharing: SharingState;
   hidden: string[];
   onHide: (process: string, hide: boolean) => void;
   onForgetTitle: (app: string, title: string) => Promise<boolean>;
@@ -61,7 +51,7 @@ export function ActivityLists({
   );
 }
 
-function AppList({ apps, total, overrides, onOverride, sharing, hidden, onHide, onForgetTitle, titleRules, onTitleRule }: { apps: AppStat[]; total: number } & OverrideProps) {
+function AppList({ apps, total, overrides, onOverride, hidden, onHide, onForgetTitle, titleRules, onTitleRule }: { apps: AppStat[]; total: number } & OverrideProps) {
   const t = useT();
   const [open, setOpen] = useState<string | null>(null);
   /** The window whose rule editor is open, as `${app}\0${title}`. */
@@ -184,7 +174,6 @@ function AppList({ apps, total, overrides, onOverride, sharing, hidden, onHide, 
                       >
                         <EyeOff className="size-3.5" /> {t.hide.button}
                       </button>
-                      {sharing.pending?.process === a.process && <SharePrompt app={a.app} process={a.process} category={sharing.pending.category} sharing={sharing} />}
                     </div>
                   )}
                 </div>
@@ -361,44 +350,6 @@ function CategoryPicker({ app, current, onPick, tabIndex }: { app: string; curre
       ) : (
         <span className="hand ml-1 text-base text-faint">{t.lists.automatic}</span>
       )}
-    </div>
-  );
-}
-
-const SOURCE_URL = "https://github.com/TempestShaw/Dopamine/blob/main/DopamineWeb/src/lib/community.ts";
-
-/**
- * Asked once, on the user's first category choice. Shows the exact request that would be sent so
- * the promise "only the category is shared" can be checked, and links to the code that sends it.
- */
-function SharePrompt({ app, process, category, sharing }: { app: string; process: string; category: Category; sharing: SharingState }) {
-  const t = useT();
-  const payload = votePayload(t.share.installId, process, "mac", category);
-  return (
-    <div className="sketch fade-in mt-4 px-4 py-3.5 text-[13px]">
-      <p className="text-[14px] leading-snug">
-        {t.share.ask(
-          <b key="app" className="font-semibold">
-            {app}
-          </b>,
-        )}
-      </p>
-      <p className="mt-1.5 text-graphite">{t.share.everything}</p>
-      <pre className="mt-2 rounded-md bg-wash whitespace-pre-wrap break-all px-3 py-2 font-mono text-[12px] leading-relaxed text-ink">
-        {JSON.stringify({ ...payload, p_platform: "mac | windows" }, null, 1).replace(/\n\s*/g, " ")}
-      </pre>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button type="button" onClick={() => sharing.set("on")} className="dab bg-ink px-3.5 py-1.5 font-semibold text-paper hover:opacity-90">
-          {t.share.yes}
-        </button>
-        <button type="button" onClick={() => sharing.set("off")} className="font-medium text-graphite underline decoration-line underline-offset-4 hover:text-ink">
-          {t.share.no}
-        </button>
-        <a href={SOURCE_URL} target="_blank" rel="noreferrer" className="hand ml-auto text-base text-faint hover:text-graphite">
-          {t.share.code}
-        </a>
-      </div>
-      {sharing.isDemo && <p className="hand mt-2 text-base text-faint">{t.share.demo}</p>}
     </div>
   );
 }

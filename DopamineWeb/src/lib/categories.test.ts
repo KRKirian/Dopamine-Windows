@@ -78,7 +78,7 @@ describe("makeClassifier", () => {
       { contains: "15-213 lecture", category: "study", scope: BROWSER_SCOPE },
       { contains: "readme", category: "study", scope: "Code" },
     ];
-    const classify = makeClassifier(undefined, { Arc: "social", Code: "other" }, {}, rules);
+    const classify = makeClassifier(undefined, { Arc: "social", Code: "other" }, rules);
     expect(classify("15-213 Lecture 5 - bilibili", "Arc")).toBe("study");
     expect(classify("凡人修仙传 - bilibili", "Google Chrome")).toBe("entertainment"); // every browser
     expect(classify("Team Discussions", "Arc")).toBe("social"); // no rule: the app choice

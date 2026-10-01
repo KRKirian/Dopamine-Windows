@@ -94,14 +94,9 @@ export function isBrowser(process: string): boolean {
   return BROWSERS.has(process.replace(/\.(exe|app)$/i, "").toLowerCase());
 }
 
-/**
- * `community` holds categories other users agreed on (see community.ts). It fills in for apps our
- * rules don't know, but never overrides a built-in rule, so a handful of bad votes can't relabel
- * well-known apps.
- */
-export function categorize(title: string, process: string, hint?: AppHint, community?: Overrides): Category {
+export function categorize(title: string, process: string, hint?: AppHint): Category {
   if (isBrowser(process)) return match(SITES, title) ?? match(TITLE_PATTERNS, title) ?? "other";
-  return match(APPS, appHaystack(process)) ?? community?.[process] ?? fromHint(hint) ?? match(SITES, title) ?? match(TITLE_PATTERNS, title) ?? "other";
+  return match(APPS, appHaystack(process)) ?? fromHint(hint) ?? match(SITES, title) ?? match(TITLE_PATTERNS, title) ?? "other";
 }
 
 /** Scope of a title rule that applies in every browser (otherwise the scope is a process name). */
@@ -109,7 +104,6 @@ export const BROWSER_SCOPE = "browsers";
 
 /**
  * The user's own rule for windows: "titles containing X count as Y", in every browser or in one app.
- * Never shared with the community: window titles are private.
  */
 export interface TitleRule {
   contains: string;
@@ -162,7 +156,6 @@ export type Classifier = (title: string, process: string) => Category;
 export function makeClassifier(
   hint: (process: string) => AppHint | undefined = () => undefined,
   overrides: Overrides = {},
-  community: Overrides = {},
   titleRules: TitleRule[] = [],
 ): Classifier {
   const cache = new Map<string, Category>();
@@ -174,7 +167,7 @@ export function makeClassifier(
     const key = `${process}\u0000${title}`;
     let c = cache.get(key);
     if (c === undefined) {
-      c = categorize(title, process, hint(process), community);
+      c = categorize(title, process, hint(process));
       if (cache.size > 20_000) cache.clear();
       cache.set(key, c);
     }

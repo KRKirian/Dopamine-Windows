@@ -87,7 +87,6 @@ Dopamine looks at the evidence in this order and stops at the first answer:
 | Your own choice for the app | Discord counts as Study because you said so |
 | The site, for browsers | `Two Sum - LeetCode - Google Chrome` → Study |
 | The app, by name | `idea64`, `LeagueClientUx`, `WXWork` |
-| Apps others agreed on | Only if you opted in, and only for apps the rules don't know |
 | What the app says about itself | macOS App Store category; Windows publisher and install path (`steamapps` means a game) |
 | The window title | `javaw` showing "Minecraft" |
 
@@ -98,14 +97,6 @@ The rules live in [`category-rules.json`](DopamineWeb/src/lib/category-rules.jso
 Your activity never leaves your computer. Window titles, times and usage stay in a local SQLite database and are only served to `localhost`, behind the pairing code.
 
 Once a day the agent asks GitHub for the latest release (`api.github.com/repos/TempestShaw/Dopamine/releases/latest`). The request carries nothing about you or your activity, only the app version as its user agent. Turn it off from the dashboard footer.
-
-Sharing categories is optional. The first time you pick a category for an app, the dashboard asks whether to share that choice so others benefit. If you agree, this is the complete request it sends, for that and later choices:
-
-```json
-{ "p_install": "<random id for this install>", "p_app": "Discord", "p_platform": "mac", "p_category": "study" }
-```
-
-The request is built in [`community.ts`](DopamineWeb/src/lib/community.ts) and stored by the functions in [`supabase/migrations`](supabase/migrations). Browser choices are never sent. An app gets a community category once at least 5 installs agree with a 70% majority. You can stop sharing any time from the dashboard footer. Sharing is not switched on in this release: no server is configured yet, so nothing is sent.
 
 ## Architecture
 
@@ -128,7 +119,6 @@ Each agent writes a row whenever the front window changes, plus marker rows when
 | [`DopamineMac`](DopamineMac) | Swift menu bar agent, no third-party dependencies |
 | [`DopamineWin`](DopamineWin) | C# tray agent |
 | [`DopamineWeb`](DopamineWeb) | Dashboard, exported as static files and bundled into both agents |
-| [`supabase`](supabase) | Server side of optional community categories |
 
 ## Build from source
 
@@ -168,7 +158,7 @@ After editing `category-rules.json`, run `bun run sync-rules` so the macOS agent
 ## Test
 
 ```bash
-cd DopamineWeb && bun test src      # analytics, categories, community payload
+cd DopamineWeb && bun test src      # analytics, categories
 cd DopamineMac && swift test        # database, API, categories
 ```
 

@@ -26,9 +26,10 @@ try {
             Start-Process "$work/old-Setup.exe" -ArgumentList @("--silent", "--installto", $target) -Wait
         } else {
             Expand-Archive "$work/old-Portable.zip" $target
-            $exe = Get-ChildItem $target -Recurse -Filter UpdaterSmoke.exe | Select-Object -First 1
-            Start-Process $exe.FullName
         }
+        $exe = Get-ChildItem $target -Recurse -Filter UpdaterSmoke.exe | Select-Object -First 1
+        if (-not $exe) { throw "Missing smoke executable" }
+        Start-Process $exe.FullName
         $deadline = (Get-Date).AddMinutes(3)
         while ((Get-Date) -lt $deadline) {
             if ((Test-Path $result) -and (Get-Content $result -Raw) -match "launched 2") { break }

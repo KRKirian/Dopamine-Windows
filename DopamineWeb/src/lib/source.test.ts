@@ -16,6 +16,7 @@ class FakeSource implements DataSource {
   async loadPreferences(): Promise<Preferences> {
     return { overrides: {}, hidden: [], titleRules: [], checkUpdates: true };
   }
+  async installUpdate() {}
   async fetchUpdate() {
     return null;
   }
@@ -79,5 +80,7 @@ describe("updateFrom", () => {
     expect(updateFrom({ update: { version: "0.0.3", url: "https://github.com/TempestShaw/Dopamine/releases/tag/v0.0.3/../../x" } })).toBeNull();
     expect(updateFrom({ update: { version: "<b>", url } })).toBeNull();
     expect(updateFrom({})).toBeNull();
+    expect(updateFrom({ update: { version: "0.0.3", url, automatic: true, ready: true } })).toEqual({ version: "0.0.3", url, automatic: true, ready: true });
+    expect(updateFrom({ update: { version: "0.0.3", url, automatic: true, ready: "true" } })).toEqual({ version: "0.0.3", url, automatic: true, ready: false });
   });
 });

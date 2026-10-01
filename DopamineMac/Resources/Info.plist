@@ -23,9 +23,19 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.0.4</string>
+    <string>0.0.5</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>0.0.5</string>
+    <key>SUFeedURL</key>
+    <string>https://github.com/TempestShaw/Dopamine/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>8ZDH1i1dsjvI9ZHApVnxKWQ8FvGGw3dCoX3UypD4tCY=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUAutomaticallyUpdate</key>
+    <true/>
+    <key>SUEnableSystemProfiling</key>
+    <false/>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSUIElement</key>

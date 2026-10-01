@@ -46,10 +46,26 @@ jobs:
           path: DopamineWeb/out
       - run: swift test
       - run: SKIP_WEB=1 ./scripts/bundle.sh
+      - name: Generate signed Sparkle feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "No Sparkle signing key on this build; release publication requires a signed feed."
+            exit 0
+          fi
+          curl -fL https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz -o "$RUNNER_TEMP/Sparkle.tar.xz"
+          mkdir -p "$RUNNER_TEMP/sparkle-tools" dist/feed
+          tar -xf "$RUNNER_TEMP/Sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle-tools"
+          cp dist/Dopamine-mac.zip dist/feed/
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/sparkle-tools/bin/generate_appcast" --ed-key-file - --download-url-prefix https://github.com/TempestShaw/Dopamine/releases/latest/download/ dist/feed
+          cp dist/feed/appcast.xml dist/
       - uses: actions/upload-artifact@v7
         with:
           name: Dopamine-mac
-          path: DopamineMac/dist/Dopamine-mac.zip
+          path: |
+            DopamineMac/dist/Dopamine-mac.zip
+            DopamineMac/dist/appcast.xml
 
   windows:
     needs: web
@@ -134,12 +150,23 @@ jobs:
           "Memory: working set {0:N1} MB, private {1:N1} MB" -f ($p.WorkingSet64 / 1MB), ($p.PrivateMemorySize64 / 1MB)
           Stop-Process -Id $proc.Id
           Get-Content "$env:LOCALAPPDATA\Dopamine\dopamine.log" -ErrorAction SilentlyContinue
-      - run: Compress-Archive -Path publish/DopamineWin.exe -DestinationPath Dopamine-win.zip
+      - name: Package with Velopack
         shell: pwsh
+        run: |
+          dotnet tool install vpk --version 1.2.161 --tool-path .tools
+          $version = ([xml](Get-Content DopamineWin.csproj)).Project.PropertyGroup.Version
+          .tools/vpk.exe pack --packId Dopamine --packVersion $version --packDir publish --mainExe DopamineWin.exe --packTitle Dopamine --icon assets/dopamine.ico --outputDir releases --delta None
+          if ($LASTEXITCODE -ne 0) { throw "Velopack packaging failed" }
+          $portable = Get-ChildItem releases/*-Portable.zip | Select-Object -First 1
+          if (-not $portable) { throw "Missing Velopack portable archive" }
+          Copy-Item $portable.FullName releases/Dopamine-win.zip
+      - name: Verify installed and portable updates
+        shell: pwsh
+        run: ../tests/windows-updater/run.ps1
       - uses: actions/upload-artifact@v7
         with:
           name: Dopamine-win
-          path: DopamineWin/Dopamine-win.zip
+          path: DopamineWin/releases/*
 
   # Runs for a pushed v* tag, or when started by hand with a version (the tag is then created here).
   release:
@@ -153,11 +180,17 @@ jobs:
       - name: Check version and release notes
         run: |
           [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must look like v1.2.3, got '$VERSION'"; exit 1; }
+          grep -q "<string>${VERSION#v}</string>" DopamineMac/Resources/Info.plist
           test -f "docs/release-notes/$VERSION.md" || { echo "Missing docs/release-notes/$VERSION.md"; exit 1; }
       - uses: actions/download-artifact@v8
         with:
           pattern: Dopamine-*
           merge-multiple: true
+      - name: Require update assets
+        run: |
+          test -s appcast.xml
+          test -s releases.win.json
+          test -n "$(find . -maxdepth 1 -name '*-full.nupkg' -print -quit)"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
@@ -167,3 +200,7 @@ jobs:
           files: |
             Dopamine-mac.zip
             Dopamine-win.zip
+            appcast.xml
+            releases.win.json
+            *-full.nupkg
+            *-Setup.exe

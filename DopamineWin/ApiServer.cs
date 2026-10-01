@@ -56,10 +56,10 @@ public sealed class ApiServer
             case "/identify":
             {
                 var info = new AgentInfo();
-                if (_updates.Available is { } release) info.Update = new UpdateDto { Version = release.Version, Url = release.Url };
+                if (_updates.Available is { } release) info.Update = new UpdateDto { Version = release.Version, Url = release.Url, Ready = release.Ready };
                 return HttpResponse.Json(JsonSerializer.Serialize(info, Json.Default.AgentInfo));
             }
-            case "/pair" or "/titles" or "/apps" or "/settings" or "/forget":
+            case "/pair" or "/titles" or "/apps" or "/settings" or "/forget" or "/update":
                 if (req.Header("authorization") != $"Bearer {_settings.Settings.PairingCode}") return HttpResponse.Empty(401);
                 return Protected(req);
             default:
@@ -71,6 +71,9 @@ public sealed class ApiServer
     {
         switch (req.Method, req.Path)
         {
+            case ("POST", "/update"):
+                return HttpResponse.Empty(_updates.RequestRestart() ? 202 : 409);
+
             case ("GET", "/pair"):
                 return HttpResponse.Empty(200);
 

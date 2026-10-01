@@ -33,11 +33,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.onStateChange = { [weak self] in self?.refresh() }
 
         let settingsStore = settings!
-        let updates = UpdateChecker(current: appVersion, isEnabled: { settingsStore.settings.checkForUpdates })
+        let updates = UpdateChecker(isEnabled: { settingsStore.settings.checkForUpdates })
         updates.onChange = { [weak self] in self?.refresh() }
         self.updates = updates
 
-        let api = API(database: database, settings: settings, webRoot: API.locateWebRoot(), update: { [weak updates] in updates?.available })
+        let api = API(database: database, settings: settings, webRoot: API.locateWebRoot(), update: { [weak updates] in updates?.available }, installUpdate: { [weak updates] in updates?.install() ?? false })
         self.api = api
         let server = HTTPServer(port: apiPort) { req in api.handle(req) }
         do {
@@ -181,7 +181,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func openUpdate() {
         popover.performClose(nil)
-        if let url = updates.available?.url { NSWorkspace.shared.open(url) }
+        updates.install()
     }
 
     private func openAccessibilitySettings() {

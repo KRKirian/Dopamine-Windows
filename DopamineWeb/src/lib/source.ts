@@ -14,6 +14,8 @@ export interface AgentInfo {
 }
 
 export interface UpdateInfo {
+  automatic?: boolean;
+  ready?: boolean;
   version: string;
   url: string;
 }
@@ -22,10 +24,10 @@ const RELEASES = "https://github.com/TempestShaw/Dopamine/releases/tag/v";
 
 /** The agent's update notice, if it names a plain version and links to that release of this project. */
 export function updateFrom(info: { update?: unknown }): UpdateInfo | null {
-  const u = info.update as { version?: unknown; url?: unknown } | undefined;
+  const u = info.update as { version?: unknown; url?: unknown; automatic?: unknown; ready?: unknown } | undefined;
   if (!u || typeof u.version !== "string" || !/^\d+\.\d+\.\d+$/.test(u.version)) return null;
   const url = RELEASES + u.version;
-  return u.url === url ? { version: u.version, url } : null;
+  return u.url === url ? { version: u.version, url, ...(u.automatic === true && { automatic: true, ready: u.ready === true }) } : null;
 }
 
 export type Platform = "windows" | "mac" | "demo";
@@ -50,6 +52,7 @@ export interface DataSource {
   savePreferences(change: Partial<Preferences>): Promise<void>;
   /** A newer release, if the agent knows of one. */
   fetchUpdate(): Promise<UpdateInfo | null>;
+  installUpdate(): Promise<void>;
   /** Erases these rows for good: their titles are overwritten and their time no longer counts. */
   forget(ids: number[]): Promise<void>;
 }
@@ -194,6 +197,14 @@ export class AgentSource implements DataSource {
   async fetchUpdate(): Promise<UpdateInfo | null> {
     const info = await identify(this.baseUrl);
     return info ? updateFrom(info) : null;
+  }
+
+  async installUpdate(): Promise<void> {
+    const res = await fetchWithTimeout(`${this.baseUrl}/update`, {
+      method: "POST", headers: { Authorization: `Bearer ${this.code}` },
+    });
+    if (res.status === 401 || res.status === 403) throw new AuthError("Pairing code rejected");
+    if (res.status !== 202) throw new Error("Update is not ready");
   }
 
   async forget(ids: number[]): Promise<void> {

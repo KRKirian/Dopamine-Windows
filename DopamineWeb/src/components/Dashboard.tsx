@@ -35,6 +35,8 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
     titleRules,
     setTitleRule,
     update,
+    installUpdate,
+    installingUpdate,
     checkUpdates,
     setCheckUpdates,
   } = useDashboard(store, view, anchor, onDisconnect);
@@ -77,9 +79,15 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
         {update && (
           <p className="sketch fade-in mb-8 px-4 py-3 text-[14px]">
             {t.update.available(update.version)}{" "}
-            <a href={update.url} target="_blank" rel="noreferrer" className="font-semibold underline decoration-line underline-offset-4 hover:text-ink">
-              {t.update.download}
-            </a>
+            {update.automatic ? (
+              <button type="button" onClick={installUpdate} disabled={!update.ready || installingUpdate} className="font-semibold underline decoration-line underline-offset-4 hover:text-ink disabled:opacity-50">
+                {installingUpdate ? t.update.installing : update.ready ? t.update.install : t.update.downloading}
+              </button>
+            ) : (
+              <a href={update.url} target="_blank" rel="noreferrer" className="font-semibold underline decoration-line underline-offset-4 hover:text-ink">
+                {t.update.download}
+              </a>
+            )}
           </p>
         )}
         {error && (

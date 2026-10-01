@@ -198,7 +198,8 @@ struct MenuView: View {
             Text(L("Dopamine \(update.version) is out.", "Dopamine \(update.version) 已发布。", "Dopamine \(update.version) 已發布。"))
                 .font(.caption)
             Spacer()
-            Button(L("Download", "去下载", "前往下載"), action: actions.openUpdate)
+            Button(update.ready ? L("Update and restart", "更新并重启", "更新並重新啟動") : L("Downloading…", "正在下载…", "正在下載…"), action: actions.openUpdate)
+                .disabled(!update.ready)
                 .buttonStyle(.link)
                 .font(.caption.weight(.semibold))
         }

@@ -49,7 +49,7 @@ Download the latest build for your computer from [Releases](https://github.com/T
 
 **Windows 10 or later**
 
-1. Unzip `Dopamine-win.zip` anywhere you like and run `DopamineWin.exe`. No .NET installation is needed.
+1. Unzip `Dopamine-win.zip` anywhere you like and run the included `DopamineWin.exe`, or use `Dopamine-win-Setup.exe` from the release to install it. No .NET installation is needed.
 2. Right-click the tray icon (or double-click it) and choose **Open Dashboard**.
 
 The dashboard opens at [localhost:26535](http://localhost:26535) and pairs itself. The menu shows a six-character pairing code if you ever need to connect by hand.
@@ -62,7 +62,7 @@ The dashboard opens at [localhost:26535](http://localhost:26535) and pairs itsel
 - **Categories that fit you.** Work, study, social, entertainment and other are detected automatically. Click a window to set its category, for that one title or for every title containing some words (a course code, a channel name), in every browser or just one app. One click changes a whole app's category too.
 - **Only what you want counted.** Hide any app from the numbers; Dopamine's own windows are hidden from the start.
 - **Forget what you'd rather not keep.** Erase a window or a session from the dashboard: its title is overwritten on disk and its time stops counting. To keep something from being recorded at all, pause from the menu bar or tray for 15 minutes, an hour, until tomorrow, or until you resume.
-- **Tells you about new versions.** Once a day the agent looks for a newer release and says so in the menu bar or tray and the dashboard, with a link to download it.
+- **Updates install themselves.** The app checks daily, downloads updates in the background and installs them when it quits. Choose **Update and restart** to apply a ready update immediately.
 - **Speaks your language.** English, 简体中文 and 繁體中文, in the dashboard and the menu bar or tray.
 - **Light on your machine.** A native menu bar or tray agent, a local SQLite file, and a dashboard with no charting libraries that holds 60 fps.
 
@@ -96,7 +96,7 @@ The rules live in [`category-rules.json`](DopamineWeb/src/lib/category-rules.jso
 
 Your activity never leaves your computer. Window titles, times and usage stay in a local SQLite database and are only served to `localhost`, behind the pairing code.
 
-Once a day the agent asks GitHub for the latest release (`api.github.com/repos/TempestShaw/Dopamine/releases/latest`). The request carries nothing about you or your activity, only the app version as its user agent. Turn it off from the dashboard footer.
+Automatic updates use Sparkle on macOS and Velopack on Windows, with update files hosted on GitHub Releases. These requests do not upload your activity, window titles or local category choices. Turn off future automatic checks and downloads from the dashboard footer; an update already prepared by Sparkle may still install when the app quits. See [updater setup and testing](docs/updates.md).
 
 ## Architecture
 

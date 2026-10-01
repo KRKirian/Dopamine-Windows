@@ -261,18 +261,19 @@ final class DopamineMacTests: XCTestCase {
         XCTAssertFalse(settings.settings.checkForUpdates)
     }
 
-    func testReleaseParsing() {
-        func json(_ tag: String) -> Data { Data(#"{"tag_name":"\#(tag)","html_url":"https://evil.example/"}"#.utf8) }
-        XCTAssertEqual(
-            UpdateChecker.release(from: json("v0.0.3"), current: "0.0.2"),
-            Release(version: "0.0.3", url: URL(string: "https://github.com/TempestShaw/Dopamine/releases/tag/v0.0.3")!)
-        )
-        XCTAssertNil(UpdateChecker.release(from: json("v0.0.2"), current: "0.0.2"))
-        XCTAssertNil(UpdateChecker.release(from: json("v0.0.1"), current: "0.0.2"))
-        XCTAssertNil(UpdateChecker.release(from: json("v1.0.0-beta"), current: "0.0.2"))
-        XCTAssertNil(UpdateChecker.release(from: Data("nope".utf8), current: "0.0.2"))
-        XCTAssertTrue(UpdateChecker.isNewer("0.0.10", than: "0.0.9"))
-        XCTAssertFalse(UpdateChecker.isNewer("0.1.0", than: "0.1.0"))
+    func testUpdateRequiresPairingAndAReadyInstaller() throws {
+        let settings = SettingsStore(url: tmp.appendingPathComponent("config.json"))
+        let db = try Database(url: tmp.appendingPathComponent("t.db"))
+        var installs = 0
+        let api = API(database: db, settings: settings, webRoot: nil, installUpdate: { installs += 1; return true })
+        let request = HTTPRequest(method: "POST", path: "/update", query: [:], headers: [:], body: Data())
+        XCTAssertEqual(api.handle(request).status, 401)
+        XCTAssertEqual(installs, 0)
+        let paired = HTTPRequest(method: "POST", path: "/update", query: [:], headers: ["authorization": "Bearer \(settings.settings.pairingCode)"], body: Data())
+        XCTAssertEqual(api.handle(paired).status, 202)
+        XCTAssertEqual(installs, 1)
+        let unready = API(database: db, settings: settings, webRoot: nil)
+        XCTAssertEqual(unready.handle(paired).status, 409)
     }
 
     func testIdentifyMentionsANewRelease() throws {
@@ -281,6 +282,9 @@ final class DopamineMacTests: XCTestCase {
         let api = API(database: try Database(url: tmp.appendingPathComponent("t.db")), settings: settings, webRoot: nil, update: { release })
         let res = api.handle(HTTPRequest(method: "GET", path: "/identify", query: [:], headers: [:], body: Data()))
         let obj = try XCTUnwrap(JSONSerialization.jsonObject(with: res.body) as? [String: Any])
-        XCTAssertEqual(obj["update"] as? [String: String], ["version": "9.9.9", "url": "https://github.com/TempestShaw/Dopamine/releases/tag/v9.9.9"])
+        let update = try XCTUnwrap(obj["update"] as? [String: Any])
+        XCTAssertEqual(update["version"] as? String, "9.9.9")
+        XCTAssertEqual(update["automatic"] as? Bool, true)
+        XCTAssertEqual(update["ready"] as? Bool, false)
     }
 }

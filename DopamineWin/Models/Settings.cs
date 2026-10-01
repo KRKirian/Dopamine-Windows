@@ -131,6 +131,8 @@ public sealed class AgentInfo
 
 public sealed class UpdateDto
 {
+    public bool Automatic { get; set; } = true;
+    public bool Ready { get; set; }
     public string Version { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
 }

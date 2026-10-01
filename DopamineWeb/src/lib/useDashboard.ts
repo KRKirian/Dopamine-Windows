@@ -40,7 +40,7 @@ export interface DashboardData {
 const LIVE_REFRESH_MS = 30_000;
 
 /** Keys into the `errors` strings of i18n.ts. */
-export type DashboardError = "save" | "unreachable" | "lost" | "forget";
+export type DashboardError = "save" | "unreachable" | "lost" | "forget" | "update";
 
 export function useDashboard(store: EventStore, view: View, anchor: Date, onAuthError: () => void) {
   const [version, setVersion] = useState(0);
@@ -53,6 +53,7 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
     titleRules: [],
     checkUpdates: true,
   }));
+  const [installingUpdate, setInstallingUpdate] = useState(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const overrides = prefs.overrides;
   const { locale } = useI18n();
@@ -78,10 +79,10 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
       return;
     }
     let cancelled = false;
-    store.source.fetchUpdate().then((u) => !cancelled && setUpdate(u), () => {});
-    return () => {
-      cancelled = true;
-    };
+    const refresh = () => store.source.fetchUpdate().then((u) => !cancelled && setUpdate(u), () => {});
+    refresh();
+    const timer = setInterval(refresh, 15_000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, [store, prefs.checkUpdates]);
 
   const savePrefs = (change: Partial<Preferences>) => {
@@ -247,6 +248,16 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
     titleRules: prefs.titleRules,
     setTitleRule,
     update,
+    installingUpdate,
+    installUpdate: async () => {
+      setInstallingUpdate(true);
+      try { await store.source.installUpdate(); }
+      catch (e) {
+        setInstallingUpdate(false);
+        if (e instanceof AuthError) authRef.current();
+        else setError("update");
+      }
+    },
     checkUpdates: prefs.checkUpdates,
     setCheckUpdates: (on: boolean) => savePrefs({ checkUpdates: on }),
   };

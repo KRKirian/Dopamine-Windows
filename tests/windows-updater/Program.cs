@@ -29,7 +29,7 @@ internal static class Program
     }
 }
 
-internal sealed class SettingsService
+public sealed class SettingsService
 {
     public sealed class Config { public bool CheckForUpdates { get; set; } = true; }
     public Config Settings { get; } = new();

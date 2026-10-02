@@ -42,7 +42,7 @@ Download the latest build for your computer from [Releases](https://github.com/T
 
 **macOS 12 or later**
 
-1. Unzip `Dopamine-mac.zip` and move `Dopamine.app` to Applications.
+1. Open `Dopamine-mac.dmg` and drag `Dopamine` onto Applications.
 2. Open it. This early build is not notarised, so macOS asks first: choose **Open Anyway** in System Settings → Privacy & Security.
 3. Allow **Accessibility** access when asked, so Dopamine can read window titles. Without it, only app names are recorded.
 4. Click the hourglass in the menu bar, then **Open Dashboard**. Tick **Open at login** there to have it start with your Mac.
@@ -162,7 +162,7 @@ cd DopamineWeb && bun test src      # analytics, categories
 cd DopamineMac && swift test        # database, API, categories
 ```
 
-CI builds and tests all three on every push and attaches `Dopamine-mac.zip` and `Dopamine-win.zip` to tagged releases.
+CI builds and tests all three on every push and attaches `Dopamine-mac.dmg`, `Dopamine-mac.zip` and `Dopamine-win.zip` to tagged releases.
 
 ## Trust and license
 

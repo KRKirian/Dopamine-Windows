@@ -66,6 +66,11 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           echo "CODESIGN_IDENTITY=Dopamine Self-Signed" >> "$GITHUB_ENV"
       - run: SKIP_WEB=1 ./scripts/bundle.sh
+      - name: Pack drag-to-install DMG
+        run: |
+          python3 -m venv "$RUNNER_TEMP/dmgbuild"
+          "$RUNNER_TEMP/dmgbuild/bin/pip" install --quiet dmgbuild==1.6.7
+          PATH="$RUNNER_TEMP/dmgbuild/bin:$PATH" ./scripts/dmg.sh
       - name: Generate signed Sparkle feed
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
@@ -85,6 +90,7 @@ jobs:
           name: Dopamine-mac
           path: |
             DopamineMac/dist/Dopamine-mac.zip
+            DopamineMac/dist/Dopamine-mac.dmg
             DopamineMac/dist/appcast.xml
 
   windows:
@@ -109,6 +115,9 @@ jobs:
         run: |
           $exe = Resolve-Path publish/DopamineWin.exe
           "Exe size: {0:N1} MB" -f ((Get-Item $exe).Length / 1MB)
+          # A startup entry left by a copy that has since moved should be pointed at this exe.
+          $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          New-ItemProperty -Path $run -Name Dopamine -Value '"C:\old\DopamineWin.exe"' -PropertyType String -Force | Out-Null
           $proc = Start-Process -FilePath $exe -PassThru
           $base = "http://127.0.0.1:26535"
           $info = $null
@@ -117,6 +126,10 @@ jobs:
           }
           if (-not $info -or $info.name -ne "dopamine-win") { throw "identify failed" }
           "identify: $($info.name) $($info.version)"
+          $entry = (Get-ItemProperty -Path $run).Dopamine
+          if ($entry -ne "`"$exe`"") { throw "startup entry not moved to this exe: $entry" }
+          Remove-ItemProperty -Path $run -Name Dopamine
+          "startup entry: $entry"
 
           $cfg = Get-Content "$env:LOCALAPPDATA\Dopamine\config.json" -Raw | ConvertFrom-Json
           $auth = @{ Authorization = "Bearer $($cfg.pairingCode)" }
@@ -135,9 +148,6 @@ jobs:
           if ($put.idleTimeout -ne 120) { throw "settings update failed" }
           if ($put.categoryOverrides.Code -ne "study" -or $put.categoryOverrides.Bad) { throw "category overrides not validated" }
           $before = Invoke-RestMethod "$base/settings" -Headers $auth
-          # A startup entry left by a copy that has since moved should be pointed at this exe.
-          $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
-          New-ItemProperty -Path $run -Name Dopamine -Value '"C:\old\DopamineWin.exe"' -PropertyType String -Force | Out-Null
           if (@($before.hiddenApps) -notcontains "DopamineWin") { throw "Dopamine itself should be hidden by default" }
           $hid = Invoke-RestMethod "$base/settings" -Method Put -Headers $auth -ContentType "application/json" -Body '{"hiddenApps":["Steam",""]}'
           if ((@($hid.hiddenApps) -join ",") -ne "Steam") { throw "hidden apps not saved: $(@($hid.hiddenApps) -join ',')" }
@@ -146,10 +156,6 @@ jobs:
           if (@($rules.titleRules).Count -ne 1 -or $rules.titleRules[0].contains -ne "Lectures") { throw "title rules not validated: $($rules.titleRules | ConvertTo-Json -Compress)" }
           if ($rules.checkForUpdates -ne $false) { throw "checkForUpdates not saved" }
 
-          $entry = (Get-ItemProperty -Path $run).Dopamine
-          if ($entry -ne "`"$exe`"") { throw "startup entry not moved to this exe: $entry" }
-          Remove-ItemProperty -Path $run -Name Dopamine
-          "startup entry: $entry"
           $none = Invoke-RestMethod "$base/forget" -Method Post -Headers $auth -ContentType "application/json" -Body '{"ids":[999999999]}'
           if ($none.forgotten -ne 0) { throw "forget touched a row that doesn't exist" }
           $bad = Invoke-WebRequest "$base/forget" -Method Post -Headers $auth -ContentType "application/json" -Body '{"ids":"x"}' -SkipHttpErrorCheck
@@ -216,6 +222,7 @@ jobs:
       - name: Require update assets
         run: |
           test -s appcast.xml
+          test -s Dopamine-mac.dmg
           test -s releases.win.json
           test -n "$(find . -maxdepth 1 -name '*-full.nupkg' -print -quit)"
       - uses: softprops/action-gh-release@v2
@@ -225,6 +232,7 @@ jobs:
           name: Dopamine ${{ env.VERSION }}
           body_path: docs/release-notes/${{ env.VERSION }}.md
           files: |
+            Dopamine-mac.dmg
             Dopamine-mac.zip
             Dopamine-win.zip
             appcast.xml

@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "record": "node record-film.mjs"
+    "record": "node record-film.mjs",
+    "dmg-background": "node render-dmg-background.mjs"
   },
   "devDependencies": {
     "ffmpeg-static": "^5.3.0",

@@ -6,7 +6,7 @@ The first version containing these updaters must be installed manually by users 
 
 ## Release pipeline
 
-- macOS bundles Sparkle and its helpers. CI signs the ZIP with the repository secret `SPARKLE_PRIVATE_KEY` and publishes `appcast.xml` alongside `Dopamine-mac.zip`. The public key is in `Info.plist`. Preserve the private key across releases; never commit it. The feed points to `https://github.com/TempestShaw/Dopamine/releases/latest/download/appcast.xml`.
+- macOS bundles Sparkle and its helpers. CI signs the ZIP with the repository secret `SPARKLE_PRIVATE_KEY` and publishes `appcast.xml` alongside `Dopamine-mac.zip`. Sparkle updates from the ZIP; `Dopamine-mac.dmg` (built by `DopamineMac/scripts/dmg.sh` with dmgbuild) is the drag-to-Applications download for new installs. The public key is in `Info.plist`. Preserve the private key across releases; never commit it. The feed points to `https://github.com/TempestShaw/Dopamine/releases/latest/download/appcast.xml`.
 - Windows builds Native AOT, then runs `vpk pack`. Releases include `Dopamine-win.zip` (the complete Velopack portable layout), `Dopamine-win-Setup.exe`, a full `.nupkg`, and `releases.win.json`. Do not distribute just the bare EXE: it has no Velopack installation metadata or update helper.
 - Increment all app versions, including macOS `CFBundleVersion`; Sparkle compares the build version. Add `docs/release-notes/v<version>.md` and publish through the existing Build workflow. Publication fails if the update feed or packages are absent.
 - Full updates are used initially. Delta generation can be added later without changing the user flow.

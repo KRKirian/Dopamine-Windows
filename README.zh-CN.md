@@ -42,7 +42,7 @@ Dopamine 是一个适用于 macOS 和 Windows 的轻量屏幕时间记录工具�
 
 **macOS 12 或更高版本**
 
-1. 解压 `Dopamine-mac.zip`，把 `Dopamine.app` 拖进「应用程序」。
+1. 打开 `Dopamine-mac.dmg`，把 `Dopamine` 拖进「应用程序」。
 2. 打开它。这个早期版本还没有经过 Apple 公证，第一次打开时 macOS 会拦一下：到「系统设置 → 隐私与安全性」里点 **仍要打开**。
 3. 系统询问时允许 **辅助功能** 权限，这样 Dopamine 才能读取窗口标题。不允许的话只会记录 App 名称。
 4. 点击菜单栏里的沙漏图标，再点 **Open Dashboard**。勾选那里的 **登录时打开**，开机后就会自动运行。
@@ -162,7 +162,7 @@ cd DopamineWeb && bun test src      # 时长计算、分类
 cd DopamineMac && swift test        # 数据库、接口、分类
 ```
 
-每次推送，CI 都会构建并测试三个部分；打版本标签时会把 `Dopamine-mac.zip` 和 `Dopamine-win.zip` 附到 release 上。
+每次推送，CI 都会构建并测试三个部分；打版本标签时会把 `Dopamine-mac.dmg`、`Dopamine-mac.zip` 和 `Dopamine-win.zip` 附到 release 上。
 
 ## 可靠性与许可证
 

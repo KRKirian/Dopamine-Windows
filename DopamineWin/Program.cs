@@ -25,6 +25,15 @@ public static class Program
         }
 
         Log.Info($"Dopamine {AppInfo.Version} starting");
+        try
+        {
+            StartupEntry.Refresh();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Could not check the startup entry", ex);
+        }
+
         DatabaseService database;
         try
         {

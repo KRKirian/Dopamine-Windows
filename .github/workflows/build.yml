@@ -115,6 +115,9 @@ jobs:
           if ($put.idleTimeout -ne 120) { throw "settings update failed" }
           if ($put.categoryOverrides.Code -ne "study" -or $put.categoryOverrides.Bad) { throw "category overrides not validated" }
           $before = Invoke-RestMethod "$base/settings" -Headers $auth
+          # A startup entry left by a copy that has since moved should be pointed at this exe.
+          $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          New-ItemProperty -Path $run -Name Dopamine -Value '"C:\old\DopamineWin.exe"' -PropertyType String -Force | Out-Null
           if (@($before.hiddenApps) -notcontains "DopamineWin") { throw "Dopamine itself should be hidden by default" }
           $hid = Invoke-RestMethod "$base/settings" -Method Put -Headers $auth -ContentType "application/json" -Body '{"hiddenApps":["Steam",""]}'
           if ((@($hid.hiddenApps) -join ",") -ne "Steam") { throw "hidden apps not saved: $(@($hid.hiddenApps) -join ',')" }
@@ -123,6 +126,10 @@ jobs:
           if (@($rules.titleRules).Count -ne 1 -or $rules.titleRules[0].contains -ne "Lectures") { throw "title rules not validated: $($rules.titleRules | ConvertTo-Json -Compress)" }
           if ($rules.checkForUpdates -ne $false) { throw "checkForUpdates not saved" }
 
+          $entry = (Get-ItemProperty -Path $run).Dopamine
+          if ($entry -ne "`"$exe`"") { throw "startup entry not moved to this exe: $entry" }
+          Remove-ItemProperty -Path $run -Name Dopamine
+          "startup entry: $entry"
           $none = Invoke-RestMethod "$base/forget" -Method Post -Headers $auth -ContentType "application/json" -Body '{"ids":[999999999]}'
           if ($none.forgotten -ne 0) { throw "forget touched a row that doesn't exist" }
           $bad = Invoke-WebRequest "$base/forget" -Method Post -Headers $auth -ContentType "application/json" -Body '{"ids":"x"}' -SkipHttpErrorCheck

@@ -45,12 +45,12 @@ Dopamine 是一个适用于 macOS 和 Windows 的轻量屏幕时间记录工具�
 1. 解压 `Dopamine-mac.zip`，把 `Dopamine.app` 拖进「应用程序」。
 2. 打开它。这个早期版本还没有经过 Apple 公证，第一次打开时 macOS 会拦一下：到「系统设置 → 隐私与安全性」里点 **仍要打开**。
 3. 系统询问时允许 **辅助功能** 权限，这样 Dopamine 才能读取窗口标题。不允许的话只会记录 App 名称。
-4. 点击菜单栏里的沙漏图标，再点 **Open Dashboard**。
+4. 点击菜单栏里的沙漏图标，再点 **Open Dashboard**。勾选那里的 **登录时打开**，开机后就会自动运行。
 
 **Windows 10 或更高版本**
 
 1. 把 `Dopamine-win.zip` 解压到任意位置，运行里面的 `DopamineWin.exe`；也可以运行 release 中的 `Dopamine-win-Setup.exe` 安装。不需要安装 .NET。
-2. 右键托盘图标（或者直接双击），选择 **Open Dashboard**。
+2. 右键托盘图标（或者直接双击），选择 **Open Dashboard**。在同一个菜单里选 **开机时启动**，登录 Windows 后就会自动运行。
 
 仪表盘会在 [localhost:26535](http://localhost:26535) 打开，并自动完成配对。如果需要手动连接，菜单里显示的六位配对码可以用上。
 

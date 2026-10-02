@@ -45,12 +45,12 @@ Download the latest build for your computer from [Releases](https://github.com/T
 1. Unzip `Dopamine-mac.zip` and move `Dopamine.app` to Applications.
 2. Open it. This early build is not notarised, so macOS asks first: choose **Open Anyway** in System Settings → Privacy & Security.
 3. Allow **Accessibility** access when asked, so Dopamine can read window titles. Without it, only app names are recorded.
-4. Click the hourglass in the menu bar, then **Open Dashboard**.
+4. Click the hourglass in the menu bar, then **Open Dashboard**. Tick **Open at login** there to have it start with your Mac.
 
 **Windows 10 or later**
 
 1. Unzip `Dopamine-win.zip` anywhere you like and run the included `DopamineWin.exe`, or use `Dopamine-win-Setup.exe` from the release to install it. No .NET installation is needed.
-2. Right-click the tray icon (or double-click it) and choose **Open Dashboard**.
+2. Right-click the tray icon (or double-click it) and choose **Open Dashboard**. Choose **Start with Windows** in the same menu to have it start when you sign in.
 
 The dashboard opens at [localhost:26535](http://localhost:26535) and pairs itself. The menu shows a six-character pairing code if you ever need to connect by hand.
 

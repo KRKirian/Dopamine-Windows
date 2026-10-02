@@ -73,7 +73,7 @@ export function PairScreen({ onPaired, onDemo }: { onPaired: (url: string, code:
 
   return (
     <PlainFrame>
-      <div className="panel scroll-thin relative flex min-w-0 flex-1 flex-col overflow-y-auto border-t border-line px-4">
+      <div className="panel panel-card scroll-thin relative flex min-w-0 flex-1 flex-col overflow-y-auto px-4 md:ml-2">
       <main className="relative m-auto w-full max-w-[440px] py-16">
         <div className="relative mb-10">
           <Palette />

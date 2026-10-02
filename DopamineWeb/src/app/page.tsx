@@ -81,7 +81,7 @@ export default function Home() {
     <I18nContext.Provider value={i18n}>
       {state.kind === "booting" ? (
         <PlainFrame>
-          <div className="panel grid flex-1 place-items-center border-t border-line">
+          <div className="panel panel-card grid flex-1 place-items-center md:ml-2">
             <Logo className="size-12 animate-pulse" />
           </div>
         </PlainFrame>

@@ -101,7 +101,7 @@ export function Dashboard({ store, onDisconnect }: { store: EventStore; onDiscon
       >
         {sidebar && <Sidebar today={data?.today ?? null} now={now} />}
 
-        <main className={`panel scroll-thin min-w-0 flex-1 overflow-y-auto border-t border-line ${sidebar ? "md:rounded-tl-xl md:border-l" : ""}`}>
+        <main className={`panel panel-card scroll-thin min-w-0 flex-1 overflow-y-auto ${sidebar ? "" : "md:ml-2"}`}>
           <div className="mx-auto max-w-[1180px] px-4 pt-7 pb-10 sm:px-8">
             <div className="mb-8 flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <DatePicker label={periodLabel(view, anchor)}>

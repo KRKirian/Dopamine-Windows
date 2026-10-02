@@ -12,7 +12,7 @@ const MINUTE = 60_000;
 /** Today, whatever date is on screen: what's in front now, today's goals, and a focus timer. */
 export function Sidebar({ today, now }: { today: Today | null; now: number }) {
   return (
-    <aside className="scroll-thin hidden w-64 shrink-0 flex-col gap-3 overflow-y-auto px-3 pt-2 pb-4 md:flex">
+    <aside className="scroll-thin hidden w-64 shrink-0 flex-col gap-2 overflow-y-auto px-2 pb-2 md:flex">
       <NowCard today={today} now={now} />
       <GoalsCard today={today} />
       <FocusTimer />

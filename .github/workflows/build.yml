@@ -117,6 +117,8 @@ jobs:
           "Exe size: {0:N1} MB" -f ((Get-Item $exe).Length / 1MB)
           # A startup entry left by a copy that has since moved should be pointed at this exe.
           $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          # Fresh runners have no Run key yet; the app creates it itself (RegCreateKeyExW).
+          if (-not (Test-Path $run)) { New-Item -Path $run | Out-Null }
           New-ItemProperty -Path $run -Name Dopamine -Value '"C:\old\DopamineWin.exe"' -PropertyType String -Force | Out-Null
           $proc = Start-Process -FilePath $exe -PassThru
           $base = "http://127.0.0.1:26535"

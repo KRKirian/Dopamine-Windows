@@ -287,4 +287,18 @@ final class DopamineMacTests: XCTestCase {
         XCTAssertEqual(update["automatic"] as? Bool, true)
         XCTAssertEqual(update["ready"] as? Bool, false)
     }
+
+    func testAccessibilityBuildIdentityIsStable() {
+        let first = AccessibilityAccess.buildIdentity()
+        XCTAssertFalse(first.isEmpty)
+        XCTAssertEqual(first, AccessibilityAccess.buildIdentity())
+    }
+
+    func testAccessibilityDoesNotAskTwiceForTheSameBuild() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "dopamine-tests-\(UUID().uuidString)"))
+        let build = AccessibilityAccess.buildIdentity()
+        defaults.set(build, forKey: "accessibilityAskedForBuild")
+        AccessibilityAccess.askIfNewBuild(defaults: defaults)
+        XCTAssertEqual(defaults.string(forKey: "accessibilityAskedForBuild"), build)
+    }
 }

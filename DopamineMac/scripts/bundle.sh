@@ -29,9 +29,15 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 if [[ -d "$WEB/out" ]]; then cp -R "$WEB/out" "$APP/Contents/Resources/web"; fi
 
-# Ad-hoc signature so macOS will run it locally. macOS ties the Accessibility permission to the
-# signature, so after rebuilding you may need to re-enable Dopamine in Privacy & Security.
-codesign --force --deep --sign - "$APP"
+# macOS ties the Accessibility permission to the signature. A stable certificate (CODESIGN_IDENTITY,
+# or the one scripts/make-signing-cert.sh creates) keeps it across builds; ad hoc signing changes
+# every build, so Dopamine has to be switched on again in Privacy & Security after each one.
+IDENTITY="${CODESIGN_IDENTITY:-}"
+if [[ -z "$IDENTITY" ]] && security find-certificate -c "Dopamine Self-Signed" >/dev/null 2>&1; then
+  IDENTITY="Dopamine Self-Signed"
+fi
+echo "▸ Signing with ${IDENTITY:-ad hoc signature}"
+codesign --force --deep --sign "${IDENTITY:--}" "$APP"
 codesign --verify --deep --strict "$APP"
 
 (cd "$ROOT/dist" && ditto -c -k --keepParent Dopamine.app Dopamine-mac.zip)

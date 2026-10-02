@@ -47,14 +47,6 @@ final class Tracker {
         self.settings = settings
     }
 
-    static var hasAccessibilityAccess: Bool { AXIsProcessTrusted() }
-
-    /// Shows the system prompt asking for Accessibility access (needed to read window titles).
-    static func requestAccessibilityAccess() {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-        _ = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
-    }
-
     func start() {
         let ws = NSWorkspace.shared.notificationCenter
         observe(ws, NSWorkspace.didActivateApplicationNotification) { [weak self] _ in self?.poll() }

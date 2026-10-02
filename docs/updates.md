@@ -11,7 +11,7 @@ The first version containing these updaters must be installed manually by users 
 - Increment all app versions, including macOS `CFBundleVersion`; Sparkle compares the build version. Add `docs/release-notes/v<version>.md` and publish through the existing Build workflow. Publication fails if the update feed or packages are absent.
 - Full updates are used initially. Delta generation can be added later without changing the user flow.
 
-The existing automatic-update switch stops future checks and downloads. Sparkle may still install an already prepared update when the app quits. macOS builds currently use ad-hoc Apple code signatures and are not notarized. Sparkle archive signatures verify update authenticity; they do not replace Developer ID signing, notarization, or stable macOS Accessibility permissions. Windows installers currently have no Authenticode certificate.
+The existing automatic-update switch stops future checks and downloads. Sparkle may still install an already prepared update when the app quits. macOS builds are not notarized. When the secrets `MACOS_CERT_P12` and `MACOS_CERT_PASSWORD` hold the self-signed certificate from `DopamineMac/scripts/make-signing-cert.sh`, every build carries the same signature and keeps its Accessibility permission across updates; without them CI signs ad hoc and the permission must be switched on again after each update. Keep that certificate across releases like the Sparkle key. Sparkle archive signatures verify update authenticity; they do not replace Developer ID signing or notarization. Windows installers currently have no Authenticode certificate.
 
 ## Verification
 

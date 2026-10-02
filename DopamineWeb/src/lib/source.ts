@@ -1,6 +1,5 @@
 import { AGENT_PROCESS, FORGOTTEN_TITLE, MAX_SEGMENT, RawEvent } from "./analytics";
 import { AppHint, Category, Overrides, TitleRule, sanitizeTitleRules } from "./categories";
-import { Sharing } from "./community";
 import { Range, addMonths, startOfMonth } from "./time";
 
 export const DEFAULT_PORT = 26535;
@@ -15,6 +14,8 @@ export interface AgentInfo {
 }
 
 export interface UpdateInfo {
+  automatic?: boolean;
+  ready?: boolean;
   version: string;
   url: string;
 }
@@ -23,10 +24,10 @@ const RELEASES = "https://github.com/TempestShaw/Dopamine/releases/tag/v";
 
 /** The agent's update notice, if it names a plain version and links to that release of this project. */
 export function updateFrom(info: { update?: unknown }): UpdateInfo | null {
-  const u = info.update as { version?: unknown; url?: unknown } | undefined;
+  const u = info.update as { version?: unknown; url?: unknown; automatic?: unknown; ready?: unknown } | undefined;
   if (!u || typeof u.version !== "string" || !/^\d+\.\d+\.\d+$/.test(u.version)) return null;
   const url = RELEASES + u.version;
-  return u.url === url ? { version: u.version, url } : null;
+  return u.url === url ? { version: u.version, url, ...(u.automatic === true && { automatic: true, ready: u.ready === true }) } : null;
 }
 
 export type Platform = "windows" | "mac" | "demo";
@@ -46,11 +47,12 @@ export interface DataSource {
   fetchEvents(fromSec: number, toSec: number): Promise<RawEvent[]>;
   /** Icon and metadata keyed by raw process name. Apps the agent knows nothing about are left out. */
   fetchApps(processNames: string[]): Promise<Record<string, AppInfo>>;
-  /** The user's category choices and sharing preference, kept by the agent. */
+  /** The user's category choices, kept by the agent. */
   loadPreferences(): Promise<Preferences>;
   savePreferences(change: Partial<Preferences>): Promise<void>;
   /** A newer release, if the agent knows of one. */
   fetchUpdate(): Promise<UpdateInfo | null>;
+  installUpdate(): Promise<void>;
   /** Erases these rows for good: their titles are overwritten and their time no longer counts. */
   forget(ids: number[]): Promise<void>;
 }
@@ -58,10 +60,6 @@ export interface DataSource {
 export interface Preferences {
   /** Category chosen per app; the menu bar reads these too. */
   overrides: Overrides;
-  /** Whether choices are shared with the community ("ask" until the user decides). */
-  sharing: Sharing;
-  /** Random id sent with shared choices so one install counts once. Created when sharing is turned on. */
-  installId?: string;
   /** Process names left out of every figure (Dopamine itself by default). */
   hidden: string[];
   /** The user's per-window category rules; they beat the per-app choice. */
@@ -82,16 +80,13 @@ export function hiddenKey(process: string): string {
 
 /** Agent settings JSON ⇄ Preferences. */
 export function preferencesFromSettings(
-  s: { categoryOverrides?: Record<string, string>; communitySharing?: string; installId?: string; hiddenApps?: unknown; titleRules?: unknown; checkForUpdates?: unknown },
+  s: { categoryOverrides?: Record<string, string>; hiddenApps?: unknown; titleRules?: unknown; checkForUpdates?: unknown },
   platform: Platform,
 ): Preferences {
-  const sharing = s.communitySharing === "on" || s.communitySharing === "off" ? s.communitySharing : "ask";
   // Agents from before hiding existed send no list at all; an empty list means "hide nothing".
   const hidden = Array.isArray(s.hiddenApps) ? s.hiddenApps.filter((p): p is string => typeof p === "string" && p.length > 0) : defaultHidden(platform);
   return {
     overrides: sanitizeOverrides(s.categoryOverrides),
-    sharing,
-    installId: s.installId || undefined,
     hidden,
     titleRules: sanitizeTitleRules(s.titleRules),
     checkUpdates: s.checkForUpdates !== false,
@@ -101,8 +96,6 @@ export function preferencesFromSettings(
 export function settingsFromPreferences(p: Partial<Preferences>) {
   return {
     ...(p.overrides && { categoryOverrides: p.overrides }),
-    ...(p.sharing && { communitySharing: p.sharing }),
-    ...(p.installId && { installId: p.installId }),
     ...(p.hidden && { hiddenApps: p.hidden }),
     ...(p.titleRules && { titleRules: p.titleRules }),
     ...(p.checkUpdates !== undefined && { checkForUpdates: p.checkUpdates }),
@@ -204,6 +197,14 @@ export class AgentSource implements DataSource {
   async fetchUpdate(): Promise<UpdateInfo | null> {
     const info = await identify(this.baseUrl);
     return info ? updateFrom(info) : null;
+  }
+
+  async installUpdate(): Promise<void> {
+    const res = await fetchWithTimeout(`${this.baseUrl}/update`, {
+      method: "POST", headers: { Authorization: `Bearer ${this.code}` },
+    });
+    if (res.status === 401 || res.status === 403) throw new AuthError("Pairing code rejected");
+    if (res.status !== 202) throw new Error("Update is not ready");
   }
 
   async forget(ids: number[]): Promise<void> {

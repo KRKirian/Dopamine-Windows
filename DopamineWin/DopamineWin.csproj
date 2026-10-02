@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>0.0.3</Version>
+    <Version>0.0.6</Version>
     <ApplicationIcon>assets\dopamine.ico</ApplicationIcon>
 
     <PublishAot>true</PublishAot>
@@ -24,6 +24,10 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>IL2026;IL2104;IL3050;IL3053</WarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
 
   <!-- The dashboard (run `bun run build` in ../DopamineWeb first) is embedded in the exe. -->
   <ItemGroup Condition="Exists('..\DopamineWeb\out\index.html')">

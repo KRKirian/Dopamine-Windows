@@ -1,7 +1,7 @@
 import Foundation
 
 let apiPort: UInt16 = 26535
-let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.3"
+let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.6"
 
 /// Routes compatible with DopamineWin's ApiServer, plus static hosting of the web dashboard.
 final class API {
@@ -9,12 +9,14 @@ final class API {
     private let settings: SettingsStore
     private let webRoot: URL?
     private let update: () -> Release?
+    private let installUpdate: () -> Bool
 
-    init(database: Database, settings: SettingsStore, webRoot: URL?, update: @escaping () -> Release? = { nil }) {
+    init(database: Database, settings: SettingsStore, webRoot: URL?, update: @escaping () -> Release? = { nil }, installUpdate: @escaping () -> Bool = { false }) {
         self.database = database
         self.settings = settings
         self.webRoot = webRoot
         self.update = update
+        self.installUpdate = installUpdate
     }
 
     func handle(_ req: HTTPRequest) -> HTTPResponse {
@@ -34,9 +36,9 @@ final class API {
         switch req.path {
         case "/identify":
             var info: [String: Any] = ["name": "dopamine-mac", "version": appVersion, "settings": ConfigurableSettings.schemas]
-            if let release = update() { info["update"] = ["version": release.version, "url": release.url.absoluteString] }
+            if let release = update() { info["update"] = ["version": release.version, "url": release.url.absoluteString, "automatic": true, "ready": release.ready] as [String: Any] }
             return .jsonObject(info)
-        case "/pair", "/titles", "/settings", "/apps", "/forget":
+        case "/pair", "/titles", "/settings", "/apps", "/forget", "/update":
             guard req.headers["authorization"] == "Bearer \(settings.settings.pairingCode)" else { return .empty(401) }
             return protected(req)
         default:
@@ -62,13 +64,13 @@ final class API {
                 if let v = patch.trackingInterval { s.trackingInterval = v }
                 if let v = patch.idleTimeout { s.idleTimeout = v }
                 if let v = patch.categoryOverrides { s.categoryOverrides = v.filter { Category(rawValue: $0.value) != nil } }
-                if let v = patch.communitySharing, ["ask", "on", "off"].contains(v) { s.communitySharing = v }
-                if let v = patch.installId, UUID(uuidString: v) != nil { s.installId = v }
                 if let v = patch.hiddenApps { s.hiddenApps = Array(v.filter { !$0.isEmpty && $0.count <= 256 }.prefix(500)) }
                 if let v = patch.titleRules { s.titleRules = TitleRule.sanitized(v) }
                 if let v = patch.checkForUpdates { s.checkForUpdates = v }
             }
             return .json(current())
+        case ("POST", "/update"):
+            return .empty(installUpdate() ? 202 : 409)
         case ("POST", "/forget"):
             guard let body = try? JSONDecoder().decode(ForgetRequest.self, from: req.body), body.ids.count <= API.maxForget else { return .empty(400) }
             return .jsonObject(["forgotten": database.forget(ids: body.ids)])
@@ -110,7 +112,6 @@ final class API {
         let s = settings.settings
         return ConfigurableSettings(
             trackingInterval: s.trackingInterval, idleTimeout: s.idleTimeout, categoryOverrides: s.categoryOverrides,
-            communitySharing: s.communitySharing, installId: s.installId.isEmpty ? nil : s.installId,
             hiddenApps: s.hidden, titleRules: s.titleRules, checkForUpdates: s.checkForUpdates
         )
     }

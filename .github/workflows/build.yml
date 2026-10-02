@@ -45,11 +45,53 @@ jobs:
           name: web
           path: DopamineWeb/out
       - run: swift test
+      # A stable certificate keeps the Accessibility grant across updates; see scripts/make-signing-cert.sh.
+      - name: Import code-signing certificate
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          if [ -z "$MACOS_CERT_P12" ]; then
+            echo "No MACOS_CERT_P12 secret: signing ad hoc, so each update needs Accessibility switched on again."
+            exit 0
+          fi
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN"
+          security set-keychain-settings "$KEYCHAIN"
+          security unlock-keychain -p "" "$KEYCHAIN"
+          printf '%s' "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security import "$RUNNER_TEMP/signing.p12" -k "$KEYCHAIN" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/signing.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          echo "CODESIGN_IDENTITY=Dopamine Self-Signed" >> "$GITHUB_ENV"
       - run: SKIP_WEB=1 ./scripts/bundle.sh
+      - name: Pack drag-to-install DMG
+        run: |
+          python3 -m venv "$RUNNER_TEMP/dmgbuild"
+          "$RUNNER_TEMP/dmgbuild/bin/pip" install --quiet dmgbuild==1.6.7
+          PATH="$RUNNER_TEMP/dmgbuild/bin:$PATH" ./scripts/dmg.sh
+      - name: Generate signed Sparkle feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "No Sparkle signing key on this build; release publication requires a signed feed."
+            exit 0
+          fi
+          curl -fL https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz -o "$RUNNER_TEMP/Sparkle.tar.xz"
+          mkdir -p "$RUNNER_TEMP/sparkle-tools" dist/feed
+          tar -xf "$RUNNER_TEMP/Sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle-tools"
+          cp dist/Dopamine-mac.zip dist/feed/
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/sparkle-tools/bin/generate_appcast" --ed-key-file - --download-url-prefix https://github.com/TempestShaw/Dopamine/releases/latest/download/ dist/feed
+          cp dist/feed/appcast.xml dist/
       - uses: actions/upload-artifact@v7
         with:
           name: Dopamine-mac
-          path: DopamineMac/dist/Dopamine-mac.zip
+          path: |
+            DopamineMac/dist/Dopamine-mac.zip
+            DopamineMac/dist/Dopamine-mac.dmg
+            DopamineMac/dist/appcast.xml
 
   windows:
     needs: web
@@ -73,6 +115,11 @@ jobs:
         run: |
           $exe = Resolve-Path publish/DopamineWin.exe
           "Exe size: {0:N1} MB" -f ((Get-Item $exe).Length / 1MB)
+          # A startup entry left by a copy that has since moved should be pointed at this exe.
+          $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          # Fresh runners have no Run key yet; the app creates it itself (RegCreateKeyExW).
+          if (-not (Test-Path $run)) { New-Item -Path $run | Out-Null }
+          New-ItemProperty -Path $run -Name Dopamine -Value '"C:\old\DopamineWin.exe"' -PropertyType String -Force | Out-Null
           $proc = Start-Process -FilePath $exe -PassThru
           $base = "http://127.0.0.1:26535"
           $info = $null
@@ -81,6 +128,10 @@ jobs:
           }
           if (-not $info -or $info.name -ne "dopamine-win") { throw "identify failed" }
           "identify: $($info.name) $($info.version)"
+          $entry = (Get-ItemProperty -Path $run).Dopamine
+          if ($entry -ne "`"$exe`"") { throw "startup entry not moved to this exe: $entry" }
+          Remove-ItemProperty -Path $run -Name Dopamine
+          "startup entry: $entry"
 
           $cfg = Get-Content "$env:LOCALAPPDATA\Dopamine\config.json" -Raw | ConvertFrom-Json
           $auth = @{ Authorization = "Bearer $($cfg.pairingCode)" }
@@ -134,12 +185,23 @@ jobs:
           "Memory: working set {0:N1} MB, private {1:N1} MB" -f ($p.WorkingSet64 / 1MB), ($p.PrivateMemorySize64 / 1MB)
           Stop-Process -Id $proc.Id
           Get-Content "$env:LOCALAPPDATA\Dopamine\dopamine.log" -ErrorAction SilentlyContinue
-      - run: Compress-Archive -Path publish/DopamineWin.exe -DestinationPath Dopamine-win.zip
+      - name: Package with Velopack
         shell: pwsh
+        run: |
+          dotnet tool install vpk --version 1.2.161 --tool-path .tools
+          $version = ([xml](Get-Content DopamineWin.csproj)).Project.PropertyGroup.Version
+          .tools/vpk.exe pack --packId Dopamine --packVersion $version --packDir publish --mainExe DopamineWin.exe --packTitle Dopamine --icon assets/dopamine.ico --outputDir releases --delta None
+          if ($LASTEXITCODE -ne 0) { throw "Velopack packaging failed" }
+          $portable = Get-ChildItem releases/*-Portable.zip | Select-Object -First 1
+          if (-not $portable) { throw "Missing Velopack portable archive" }
+          Copy-Item $portable.FullName releases/Dopamine-win.zip
+      - name: Verify installed and portable updates
+        shell: pwsh
+        run: ../tests/windows-updater/run.ps1
       - uses: actions/upload-artifact@v7
         with:
           name: Dopamine-win
-          path: DopamineWin/Dopamine-win.zip
+          path: DopamineWin/releases/*
 
   # Runs for a pushed v* tag, or when started by hand with a version (the tag is then created here).
   release:
@@ -153,11 +215,18 @@ jobs:
       - name: Check version and release notes
         run: |
           [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must look like v1.2.3, got '$VERSION'"; exit 1; }
+          grep -q "<string>${VERSION#v}</string>" DopamineMac/Resources/Info.plist
           test -f "docs/release-notes/$VERSION.md" || { echo "Missing docs/release-notes/$VERSION.md"; exit 1; }
       - uses: actions/download-artifact@v8
         with:
           pattern: Dopamine-*
           merge-multiple: true
+      - name: Require update assets
+        run: |
+          test -s appcast.xml
+          test -s Dopamine-mac.dmg
+          test -s releases.win.json
+          test -n "$(find . -maxdepth 1 -name '*-full.nupkg' -print -quit)"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
@@ -165,5 +234,10 @@ jobs:
           name: Dopamine ${{ env.VERSION }}
           body_path: docs/release-notes/${{ env.VERSION }}.md
           files: |
+            Dopamine-mac.dmg
             Dopamine-mac.zip
             Dopamine-win.zip
+            appcast.xml
+            releases.win.json
+            *-full.nupkg
+            *-Setup.exe

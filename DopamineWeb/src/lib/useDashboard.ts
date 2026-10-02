@@ -17,8 +17,7 @@ import {
   rowsIn,
   summarize,
 } from "./analytics";
-import { Category, MAX_TITLE_RULES, Overrides, cleanTitle, displayApp, makeClassifier } from "./categories";
-import { Sharing, communityAvailable, fetchCommunityCategories, isShareable, newInstallId, shareChoice } from "./community";
+import { Category, MAX_TITLE_RULES, cleanTitle, displayApp, makeClassifier } from "./categories";
 import { Insight, buildInsights } from "./insights";
 import { useI18n } from "./i18n";
 import { AuthError, EventStore, Preferences, RawEventFilter, UpdateInfo, defaultHidden, hiddenKey } from "./source";
@@ -41,7 +40,7 @@ export interface DashboardData {
 const LIVE_REFRESH_MS = 30_000;
 
 /** Keys into the `errors` strings of i18n.ts. */
-export type DashboardError = "save" | "unreachable" | "lost" | "forget";
+export type DashboardError = "save" | "unreachable" | "lost" | "forget" | "update";
 
 export function useDashboard(store: EventStore, view: View, anchor: Date, onAuthError: () => void) {
   const [version, setVersion] = useState(0);
@@ -50,15 +49,12 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
   const [now, setNow] = useState(() => Date.now());
   const [prefs, setPrefs] = useState<Preferences>(() => ({
     overrides: {},
-    sharing: "ask",
     hidden: defaultHidden(store.source.platform),
     titleRules: [],
     checkUpdates: true,
   }));
+  const [installingUpdate, setInstallingUpdate] = useState(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
-  const [community, setCommunity] = useState<Overrides>({});
-  /** A choice waiting for the user to decide whether to share it (asked once, on the first choice). */
-  const [pendingShare, setPendingShare] = useState<{ process: string; category: Category } | null>(null);
   const overrides = prefs.overrides;
   const { locale } = useI18n();
   const authRef = useRef(onAuthError);
@@ -72,12 +68,9 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
   }, [anchor]);
 
   const platform = store.source.platform;
-  // Sample data can walk through the sharing prompt, but never sends anything.
-  const canShare = platform === "demo" || communityAvailable();
 
   useEffect(() => {
     store.source.loadPreferences().then(setPrefs, () => {});
-    if (platform !== "demo") fetchCommunityCategories(platform).then(setCommunity);
   }, [store, platform]);
 
   useEffect(() => {
@@ -86,19 +79,15 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
       return;
     }
     let cancelled = false;
-    store.source.fetchUpdate().then((u) => !cancelled && setUpdate(u), () => {});
-    return () => {
-      cancelled = true;
-    };
+    const refresh = () => store.source.fetchUpdate().then((u) => !cancelled && setUpdate(u), () => {});
+    refresh();
+    const timer = setInterval(refresh, 15_000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, [store, prefs.checkUpdates]);
 
   const savePrefs = (change: Partial<Preferences>) => {
     setPrefs((prev) => ({ ...prev, ...change }));
     store.source.savePreferences(change).catch(() => setError("save"));
-  };
-
-  const share = (installId: string | undefined, process: string, category: Category | null) => {
-    if (platform !== "demo" && installId) shareChoice(installId, process, platform, category);
   };
 
   /** Pins an app to a category (or back to automatic with null). */
@@ -107,10 +96,6 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
     if (category) next[process] = category;
     else delete next[process];
     savePrefs({ overrides: next });
-
-    if (!canShare || !isShareable(process)) return;
-    if (prefs.sharing === "on") share(prefs.installId, process, category);
-    else if (prefs.sharing === "ask" && category) setPendingShare({ process, category });
   };
 
   /** "Windows whose title contains `contains` count as `category`" (null removes the rule). */
@@ -149,14 +134,6 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
 
   /** Everything one session of an app recorded. */
   const forgetSession = (session: Session) => forget((e) => displayApp(e.processName) === session.app, { start: session.start, end: session.end });
-
-  /** The user's answer to the sharing prompt (also used by the footer switch). */
-  const setSharing = (sharing: Exclude<Sharing, "ask">) => {
-    const installId = sharing === "on" ? (prefs.installId ?? newInstallId()) : prefs.installId;
-    savePrefs({ sharing, installId });
-    if (sharing === "on" && pendingShare) share(installId, pendingShare.process, pendingShare.category);
-    setPendingShare(null);
-  };
 
   // Load everything the current view needs; the store caches by month, so this is usually instant.
   useEffect(() => {
@@ -211,10 +188,10 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
   }, [store, isLive]);
 
   const classify = useMemo(
-    () => makeClassifier((p) => store.app(p), overrides, community, prefs.titleRules),
+    () => makeClassifier((p) => store.app(p), overrides, prefs.titleRules),
     // `version` bumps when new app metadata may have arrived.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store, overrides, community, prefs.titleRules, version],
+    [store, overrides, prefs.titleRules, version],
   );
 
   const hiddenSet = useMemo(() => new Set(prefs.hidden.map(hiddenKey)), [prefs.hidden]);
@@ -271,8 +248,17 @@ export function useDashboard(store: EventStore, view: View, anchor: Date, onAuth
     titleRules: prefs.titleRules,
     setTitleRule,
     update,
+    installingUpdate,
+    installUpdate: async () => {
+      setInstallingUpdate(true);
+      try { await store.source.installUpdate(); }
+      catch (e) {
+        setInstallingUpdate(false);
+        if (e instanceof AuthError) authRef.current();
+        else setError("update");
+      }
+    },
     checkUpdates: prefs.checkUpdates,
     setCheckUpdates: (on: boolean) => savePrefs({ checkUpdates: on }),
-    sharing: { available: canShare, state: prefs.sharing, pending: pendingShare, set: setSharing, isDemo: platform === "demo" },
   };
 }

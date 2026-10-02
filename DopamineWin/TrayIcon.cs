@@ -12,7 +12,8 @@ namespace DopamineWin;
 public sealed unsafe class TrayIcon
 {
     private const uint CallbackMessage = WM_APP + 1;
-    private const int CmdOpen = 1, CmdResume = 2, CmdExit = 3, CmdPause15 = 4, CmdPause60 = 5, CmdPauseTomorrow = 6, CmdPauseOpen = 7, CmdUpdate = 8;
+    private const uint RestartMessage = WM_APP + 2;
+    private const int CmdOpen = 1, CmdResume = 2, CmdExit = 3, CmdPause15 = 4, CmdPause60 = 5, CmdPauseTomorrow = 6, CmdPauseOpen = 7, CmdUpdate = 8, CmdStartup = 9;
     private const int ApplicationIconId = 32512; // resource id the SDK gives <ApplicationIcon>
 
     private static TrayIcon? _instance; // the window procedure is static; it reaches the tray through this
@@ -66,6 +67,8 @@ public sealed unsafe class TrayIcon
         fixed (char* name = "TaskbarCreated") _taskbarCreated = RegisterWindowMessageW(name);
         WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_THIS_SESSION);
         AddIcon();
+
+        _updates.RestartRequested += () => PostMessageW(_hwnd, RestartMessage, IntPtr.Zero, IntPtr.Zero);
 
         MSG msg;
         while (GetMessageW(&msg, IntPtr.Zero, 0, 0) > 0)
@@ -144,6 +147,10 @@ public sealed unsafe class TrayIcon
 
         switch (msg)
         {
+            case RestartMessage:
+                _onExit();
+                DestroyWindow(_hwnd);
+                return IntPtr.Zero;
             case WM_WTSSESSION_CHANGE:
                 switch ((int)wParam)
                 {
@@ -198,7 +205,9 @@ public sealed unsafe class TrayIcon
             var update = _updates.Available;
             if (update != null)
             {
-                Add(menu, Strings.T($"Dopamine {update.Version} is out: download", $"Dopamine {update.Version} 已发布：去下载", $"Dopamine {update.Version} 已發布：前往下載"), CmdUpdate, MF_STRING);
+                Add(menu, update.Ready
+                    ? Strings.T($"Dopamine {update.Version}: update and restart", $"Dopamine {update.Version}：更新并重启", $"Dopamine {update.Version}：更新並重新啟動")
+                    : Strings.T($"Dopamine {update.Version}: downloading…", $"Dopamine {update.Version}：正在下载…", $"Dopamine {update.Version}：正在下載…"), CmdUpdate, update.Ready ? MF_STRING : MF_GRAYED);
                 Separator(menu);
             }
 
@@ -235,6 +244,8 @@ public sealed unsafe class TrayIcon
                 fixed (char* t = Strings.T("Pause Tracking", "暂停记录", "暫停記錄")) AppendMenuW(menu, MF_POPUP, (nuint)pause, t);
             }
 
+            var startsWithWindows = StartupEntry.IsEnabled;
+            Add(menu, Strings.T("Start with Windows", "开机时启动", "開機時啟動"), CmdStartup, MF_STRING | (startsWithWindows ? MF_CHECKED : 0));
             Add(menu, Strings.T("Exit", "退出", "結束"), CmdExit, MF_STRING);
 
             POINT pt;
@@ -250,7 +261,10 @@ public sealed unsafe class TrayIcon
                     OpenDashboard();
                     break;
                 case CmdUpdate when update != null:
-                    Win32.Open(update.Url);
+                    _updates.RequestRestart();
+                    break;
+                case CmdStartup:
+                    if (!StartupEntry.Set(!startsWithWindows)) Log.Error("Could not change Start with Windows");
                     break;
                 case CmdResume:
                     _tracker.Resume();

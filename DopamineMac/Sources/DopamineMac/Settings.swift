@@ -28,10 +28,6 @@ struct StoredSettings: Codable, Equatable {
     var showTimeInMenuBar: Bool = true
     /// The user's category choices, keyed by process name ("work", "study", …).
     var categoryOverrides: [String: String] = [:]
-    /// "ask", "on" or "off": whether category choices are shared with the community (decided in the dashboard).
-    var communitySharing: String = "ask"
-    /// Random id sent with shared choices so one install counts once. Empty until sharing is turned on.
-    var installId: String = ""
     /// Process names left out of every figure. nil until the user changes it, meaning `defaultHidden`.
     var hiddenApps: [String]?
     /// The user's per-window category rules; they beat `categoryOverrides`.
@@ -55,8 +51,6 @@ struct StoredSettings: Codable, Equatable {
         idleTimeout = try c.decodeIfPresent(Int.self, forKey: .idleTimeout) ?? 300
         showTimeInMenuBar = try c.decodeIfPresent(Bool.self, forKey: .showTimeInMenuBar) ?? true
         categoryOverrides = try c.decodeIfPresent([String: String].self, forKey: .categoryOverrides) ?? [:]
-        communitySharing = try c.decodeIfPresent(String.self, forKey: .communitySharing) ?? "ask"
-        installId = try c.decodeIfPresent(String.self, forKey: .installId) ?? ""
         hiddenApps = try c.decodeIfPresent([String].self, forKey: .hiddenApps)
         titleRules = try c.decodeIfPresent([TitleRule].self, forKey: .titleRules) ?? []
         checkForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
@@ -74,8 +68,6 @@ struct ConfigurableSettings: Codable {
     var trackingInterval: Int?
     var idleTimeout: Int?
     var categoryOverrides: [String: String]?
-    var communitySharing: String?
-    var installId: String?
     var hiddenApps: [String]?
     var titleRules: [TitleRule]?
     var checkForUpdates: Bool?

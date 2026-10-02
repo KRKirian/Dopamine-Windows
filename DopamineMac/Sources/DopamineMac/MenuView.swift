@@ -198,7 +198,8 @@ struct MenuView: View {
             Text(L("Dopamine \(update.version) is out.", "Dopamine \(update.version) 已发布。", "Dopamine \(update.version) 已發布。"))
                 .font(.caption)
             Spacer()
-            Button(L("Download", "去下载", "前往下載"), action: actions.openUpdate)
+            Button(update.ready ? L("Update and restart", "更新并重启", "更新並重新啟動") : L("Downloading…", "正在下载…", "正在下載…"), action: actions.openUpdate)
+                .disabled(!update.ready)
                 .buttonStyle(.link)
                 .font(.caption.weight(.semibold))
         }
@@ -212,6 +213,11 @@ struct MenuView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L("Window titles need Accessibility access", "读取窗口标题需要“辅助功能”权限", "讀取視窗標題需要「輔助使用」權限")).font(.caption.weight(.semibold))
                 Text(L("Without it Dopamine only sees app names.", "没有权限时 Dopamine 只能看到应用名称。", "沒有權限時 Dopamine 只能看到應用程式名稱。")).font(.caption).foregroundColor(.secondary)
+                Text(L(
+                    "Already switched on? That entry is from an older copy; the button below clears it so you can turn it on again.",
+                    "列表里已经打开了？那是旧版本留下的记录，点下面的按钮会清掉它，再重新打开即可。",
+                    "列表裡已經打開了？那是舊版本留下的紀錄，點下面的按鈕會清掉它，再重新打開即可。"
+                )).font(.caption).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true)
                 Button(L("Open System Settings…", "打开系统设置…", "打開系統設定…"), action: actions.grantAccessibility)
                     .buttonStyle(.link)
                     .font(.caption)

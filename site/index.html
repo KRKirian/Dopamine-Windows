@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dopamine: see where your hours went</title>
+    <title>Dopamine: know where your time goes</title>
     <meta name="description" content="A small screen-time tracker for macOS and Windows. It notes which window is in front, keeps that on your computer, and draws your day as a timeline, a breakdown by app, and a month of paint dabs." />
     <meta name="color-scheme" content="light dark" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Dopamine: see where your hours went" />
+    <meta property="og:title" content="Dopamine: know where your time goes" />
     <meta property="og:description" content="A screen-time tracker for macOS and Windows that keeps everything on your computer." />
     <meta property="og:image" content="https://tempestshaw.github.io/Dopamine/assets/dashboard-light.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -59,11 +59,11 @@
       <main id="main">
         <section class="wrap hero">
           <p class="eyebrow hand" data-i18n="eyebrow">a screen-time tracker for macOS and Windows</p>
-          <h1 data-i18n="headline">See where your <span class="marker">hours</span> went, without lifting a finger.</h1>
+          <h1 data-i18n="headline">Know where your <span class="marker">time</span> goes.</h1>
           <div class="hero-foot">
             <p class="lede" data-i18n="lede">Dopamine notes which app and window are in front, keeps that on your computer, and draws your day as a timeline, a breakdown by app and window, and a month of paint dabs. It pauses on its own when you lock the screen, sleep, or walk away.</p>
             <div class="ctas" data-downloads>
-              <a class="btn primary" data-os="mac" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.zip">
+              <a class="btn primary" data-os="mac" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.dmg">
                 <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 2v10M4.5 8 9 12.5 13.5 8M3 15.5h12" /></svg>
                 <span data-i18n="dlMac">Download for macOS</span>
               </a>
@@ -164,16 +164,7 @@
           <div class="privacy">
             <div class="col reveal">
               <h3 data-i18n="privUpdTitle">A daily check for new versions</h3>
-              <p data-i18n="privUpd">Once a day the agent asks GitHub for the latest release. The request carries nothing about you or your activity, only the app version. Turn it off from the dashboard footer.</p>
-            </div>
-            <div class="col reveal">
-              <h3 data-i18n="privShareTitle">Sharing categories, only if you agree</h3>
-              <p data-i18n="privShare">The first time you pick a category for an app, the dashboard asks whether to share that choice so others benefit. If you agree, this is the complete request:</p>
-              <pre><code>{ <span class="k">"p_install"</span>: "&lt;random id for this install&gt;",
-  <span class="k">"p_app"</span>: "Discord",
-  <span class="k">"p_platform"</span>: "mac",
-  <span class="k">"p_category"</span>: "study" }</code></pre>
-              <p data-i18n="privShare2">Browser choices are never sent. Sharing isn't switched on in this release: no server is configured yet, so nothing is sent.</p>
+              <p data-i18n="privUpd">Sparkle on macOS and Velopack on Windows download updates from GitHub Releases and install them when the app quits. Choose Update and restart to apply a ready update. No activity records are uploaded. Turn off future checks and downloads from the dashboard footer.</p>
             </div>
           </div>
         </section>
@@ -187,12 +178,12 @@
             <div class="platform sketch reveal">
               <h3 data-i18n="macTitle">macOS 12 or later</h3>
               <ol>
-                <li data-i18n="mac1">Unzip <code>Dopamine-mac.zip</code> and move <code>Dopamine.app</code> to Applications.</li>
+                <li data-i18n="mac1">Open <code>Dopamine-mac.dmg</code> and drag <code>Dopamine</code> onto Applications.</li>
                 <li data-i18n="mac2">Open it. This early build isn't notarised, so macOS asks first: choose <strong>Open Anyway</strong> in System Settings → Privacy &amp; Security.</li>
                 <li data-i18n="mac3">Allow <strong>Accessibility</strong> access when asked, so Dopamine can read window titles. Without it, only app names are recorded.</li>
                 <li data-i18n="mac4">Click the hourglass in the menu bar, then <strong>Open Dashboard</strong>. Tick <strong>Open at login</strong> there to start with your Mac.</li>
               </ol>
-              <a class="btn primary" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.zip"><span data-i18n="dlMac">Download for macOS</span></a>
+              <a class="btn primary" href="https://github.com/TempestShaw/Dopamine/releases/latest/download/Dopamine-mac.dmg"><span data-i18n="dlMac">Download for macOS</span></a>
             </div>
             <div class="platform sketch reveal">
               <h3 data-i18n="winTitle">Windows 10 or later</h3>

@@ -7,10 +7,12 @@ let package = Package(
     products: [
         .executable(name: "DopamineMac", targets: ["DopamineMac"]),
     ],
+    dependencies: [.package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0")],
     targets: [
         .executableTarget(
             name: "DopamineMac",
-            linkerSettings: [.linkedLibrary("sqlite3")]
+            dependencies: [.product(name: "Sparkle", package: "Sparkle")],
+            linkerSettings: [.linkedLibrary("sqlite3"), .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]
         ),
         .testTarget(
             name: "DopamineMacTests",

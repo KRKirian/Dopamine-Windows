@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let popover = NSPopover()
     private let model = MenuModel()
     private var refreshTimer: Timer?
+    private var accessibilityTimer: Timer?
+    private let accessibilityWatchSeconds: TimeInterval = 180
     private let summaryQueue = DispatchQueue(label: "dopamine.summary", qos: .utility)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -33,11 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.onStateChange = { [weak self] in self?.refresh() }
 
         let settingsStore = settings!
-        let updates = UpdateChecker(current: appVersion, isEnabled: { settingsStore.settings.checkForUpdates })
+        let updates = UpdateChecker(isEnabled: { settingsStore.settings.checkForUpdates })
         updates.onChange = { [weak self] in self?.refresh() }
         self.updates = updates
 
-        let api = API(database: database, settings: settings, webRoot: API.locateWebRoot(), update: { [weak updates] in updates?.available })
+        let api = API(database: database, settings: settings, webRoot: API.locateWebRoot(), update: { [weak updates] in updates?.available }, installUpdate: { [weak updates] in updates?.install() ?? false })
         self.api = api
         let server = HTTPServer(port: apiPort) { req in api.handle(req) }
         do {
@@ -56,10 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tracker.start()
         updates.start()
 
-        if !Tracker.hasAccessibilityAccess && !UserDefaults.standard.bool(forKey: "askedForAccessibility") {
-            UserDefaults.standard.set(true, forKey: "askedForAccessibility")
-            Tracker.requestAccessibilityAccess()
-        }
+        AccessibilityAccess.askIfNewBuild()
 
         refresh()
         let timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in self?.refresh() }
@@ -162,7 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.model.pausedUntil = self.tracker.pausedUntil
                 self.model.update = self.updates.available
                 self.model.pairingCode = self.settings.settings.pairingCode
-                self.model.hasAccessibility = Tracker.hasAccessibilityAccess
+                self.model.hasAccessibility = AccessibilityAccess.isGranted
                 self.refreshLoginItemState()
                 self.updateStatusButton()
             }
@@ -181,13 +180,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func openUpdate() {
         popover.performClose(nil)
-        if let url = updates.available?.url { NSWorkspace.shared.open(url) }
+        updates.install()
     }
 
     private func openAccessibilitySettings() {
-        Tracker.requestAccessibilityAccess()
+        AccessibilityAccess.ask()
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
+        }
+        watchForAccessibilityGrant()
+    }
+
+    /// Clears the menu's notice as soon as the switch is turned on, instead of at the next refresh.
+    private func watchForAccessibilityGrant() {
+        accessibilityTimer?.invalidate()
+        let deadline = Date().addingTimeInterval(accessibilityWatchSeconds)
+        accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] timer in
+            guard let self else { return timer.invalidate() }
+            let granted = AccessibilityAccess.isGranted
+            if granted || Date() > deadline {
+                timer.invalidate()
+                self.accessibilityTimer = nil
+            }
+            if granted { self.refresh() }
         }
     }
 

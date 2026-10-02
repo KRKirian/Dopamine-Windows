@@ -4,7 +4,7 @@
 
 <h1 align="center">Dopamine</h1>
 
-<p align="center">See where your hours went, without lifting a finger.</p>
+<p align="center">Know where your time goes.</p>
 
 <p align="center">
   <strong>English</strong> | <a href="README.zh-CN.md" lang="zh-CN">简体中文</a>
@@ -42,15 +42,15 @@ Download the latest build for your computer from [Releases](https://github.com/T
 
 **macOS 12 or later**
 
-1. Unzip `Dopamine-mac.zip` and move `Dopamine.app` to Applications.
+1. Open `Dopamine-mac.dmg` and drag `Dopamine` onto Applications.
 2. Open it. This early build is not notarised, so macOS asks first: choose **Open Anyway** in System Settings → Privacy & Security.
 3. Allow **Accessibility** access when asked, so Dopamine can read window titles. Without it, only app names are recorded.
-4. Click the hourglass in the menu bar, then **Open Dashboard**.
+4. Click the hourglass in the menu bar, then **Open Dashboard**. Tick **Open at login** there to have it start with your Mac.
 
 **Windows 10 or later**
 
-1. Unzip `Dopamine-win.zip` anywhere you like and run `DopamineWin.exe`. No .NET installation is needed.
-2. Right-click the tray icon (or double-click it) and choose **Open Dashboard**.
+1. Unzip `Dopamine-win.zip` anywhere you like and run the included `DopamineWin.exe`, or use `Dopamine-win-Setup.exe` from the release to install it. No .NET installation is needed.
+2. Right-click the tray icon (or double-click it) and choose **Open Dashboard**. Choose **Start with Windows** in the same menu to have it start when you sign in.
 
 The dashboard opens at [localhost:26535](http://localhost:26535) and pairs itself. The menu shows a six-character pairing code if you ever need to connect by hand.
 
@@ -62,7 +62,7 @@ The dashboard opens at [localhost:26535](http://localhost:26535) and pairs itsel
 - **Categories that fit you.** Work, study, social, entertainment and other are detected automatically. Click a window to set its category, for that one title or for every title containing some words (a course code, a channel name), in every browser or just one app. One click changes a whole app's category too.
 - **Only what you want counted.** Hide any app from the numbers; Dopamine's own windows are hidden from the start.
 - **Forget what you'd rather not keep.** Erase a window or a session from the dashboard: its title is overwritten on disk and its time stops counting. To keep something from being recorded at all, pause from the menu bar or tray for 15 minutes, an hour, until tomorrow, or until you resume.
-- **Tells you about new versions.** Once a day the agent looks for a newer release and says so in the menu bar or tray and the dashboard, with a link to download it.
+- **Updates install themselves.** The app checks daily, downloads updates in the background and installs them when it quits. Choose **Update and restart** to apply a ready update immediately.
 - **Speaks your language.** English, 简体中文 and 繁體中文, in the dashboard and the menu bar or tray.
 - **Light on your machine.** A native menu bar or tray agent, a local SQLite file, and a dashboard with no charting libraries that holds 60 fps.
 
@@ -87,7 +87,6 @@ Dopamine looks at the evidence in this order and stops at the first answer:
 | Your own choice for the app | Discord counts as Study because you said so |
 | The site, for browsers | `Two Sum - LeetCode - Google Chrome` → Study |
 | The app, by name | `idea64`, `LeagueClientUx`, `WXWork` |
-| Apps others agreed on | Only if you opted in, and only for apps the rules don't know |
 | What the app says about itself | macOS App Store category; Windows publisher and install path (`steamapps` means a game) |
 | The window title | `javaw` showing "Minecraft" |
 
@@ -97,15 +96,7 @@ The rules live in [`category-rules.json`](DopamineWeb/src/lib/category-rules.jso
 
 Your activity never leaves your computer. Window titles, times and usage stay in a local SQLite database and are only served to `localhost`, behind the pairing code.
 
-Once a day the agent asks GitHub for the latest release (`api.github.com/repos/TempestShaw/Dopamine/releases/latest`). The request carries nothing about you or your activity, only the app version as its user agent. Turn it off from the dashboard footer.
-
-Sharing categories is optional. The first time you pick a category for an app, the dashboard asks whether to share that choice so others benefit. If you agree, this is the complete request it sends, for that and later choices:
-
-```json
-{ "p_install": "<random id for this install>", "p_app": "Discord", "p_platform": "mac", "p_category": "study" }
-```
-
-The request is built in [`community.ts`](DopamineWeb/src/lib/community.ts) and stored by the functions in [`supabase/migrations`](supabase/migrations). Browser choices are never sent. An app gets a community category once at least 5 installs agree with a 70% majority. You can stop sharing any time from the dashboard footer. Sharing is not switched on in this release: no server is configured yet, so nothing is sent.
+Automatic updates use Sparkle on macOS and Velopack on Windows, with update files hosted on GitHub Releases. These requests do not upload your activity, window titles or local category choices. Turn off future automatic checks and downloads from the dashboard footer; an update already prepared by Sparkle may still install when the app quits. See [updater setup and testing](docs/updates.md).
 
 ## Architecture
 
@@ -128,7 +119,6 @@ Each agent writes a row whenever the front window changes, plus marker rows when
 | [`DopamineMac`](DopamineMac) | Swift menu bar agent, no third-party dependencies |
 | [`DopamineWin`](DopamineWin) | C# tray agent |
 | [`DopamineWeb`](DopamineWeb) | Dashboard, exported as static files and bundled into both agents |
-| [`supabase`](supabase) | Server side of optional community categories |
 
 ## Build from source
 
@@ -168,11 +158,11 @@ After editing `category-rules.json`, run `bun run sync-rules` so the macOS agent
 ## Test
 
 ```bash
-cd DopamineWeb && bun test src      # analytics, categories, community payload
+cd DopamineWeb && bun test src      # analytics, categories
 cd DopamineMac && swift test        # database, API, categories
 ```
 
-CI builds and tests all three on every push and attaches `Dopamine-mac.zip` and `Dopamine-win.zip` to tagged releases.
+CI builds and tests all three on every push and attaches `Dopamine-mac.dmg`, `Dopamine-mac.zip` and `Dopamine-win.zip` to tagged releases.
 
 ## Trust and license
 

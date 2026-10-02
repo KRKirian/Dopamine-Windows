@@ -118,6 +118,7 @@ export class DemoSource implements DataSource {
   /** Sample data is regenerated on every fetch, so forgotten rows are remembered until reload. */
   private forgotten = new Set<number>();
 
+  async installUpdate() {}
   async fetchUpdate() {
     return null;
   }

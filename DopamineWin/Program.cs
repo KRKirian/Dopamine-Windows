@@ -6,6 +6,7 @@ public static class Program
 {
     public static int Main()
     {
+        Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
         // One tracker per user. Launching it again just opens the dashboard.
         using var single = new Mutex(true, @"Local\Dopamine", out var first);
         AppInfo.MigrateFromExeDirectory();
@@ -24,6 +25,15 @@ public static class Program
         }
 
         Log.Info($"Dopamine {AppInfo.Version} starting");
+        try
+        {
+            StartupEntry.Refresh();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Could not check the startup entry", ex);
+        }
+
         DatabaseService database;
         try
         {
@@ -72,6 +82,7 @@ public static class Program
         new TrayIcon(tracker, settings, database, updates, Stop).Run();
         Stop();
         database.Dispose();
+        updates.ApplyOnExit();
         return 0;
     }
 }

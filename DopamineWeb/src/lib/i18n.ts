@@ -37,6 +37,7 @@ const en = {
   themeDark: "Canvas (dark)",
   retry: "Retry",
   errors: {
+    update: "Could not start the update. Try again from the app menu.",
     save: "Couldn't save that setting.",
     unreachable: "Couldn't reach the Dopamine agent. Is it running?",
     lost: "Lost connection to the Dopamine agent.",
@@ -44,15 +45,15 @@ const en = {
   },
   footer: {
     local: "everything stays on this computer",
-    sharing: "your activity stays on this computer; only app categories you pick are shared",
-    stop: "stop sharing category choices",
-    start: "share category choices to help others",
-    updatesOn: "looks for a new version on GitHub once a day · turn off",
+    updatesOn: "checks and downloads updates daily · turn off",
     updatesOff: "update checks are off · turn on",
   },
   update: {
     available: (v: string) => `Dopamine ${v} is out.`,
     download: "Download it",
+    install: "Update and restart",
+    downloading: "Downloading update…",
+    installing: "Restarting…",
   },
   categories: { work: "Work", study: "Study", social: "Social", entertainment: "Entertainment", other: "Other" } as Record<Category, string>,
   stats: {
@@ -135,15 +136,6 @@ const en = {
     yes: "forget",
     no: "keep",
   },
-  share: {
-    ask: (app: ReactNode) => ["Share this choice so Dopamine recognises ", app, " for other people too?"],
-    everything: "This is everything that would be sent, now and for later choices. No window titles, no times, no usage:",
-    yes: "Share anonymously",
-    no: "Keep it on this computer",
-    code: "read the code →",
-    demo: "sample data: nothing is sent either way",
-    installId: "<random id for this install>",
-  },
   pair: {
     title: ["Rediscover", "your time."],
     intro: "Dopamine notes which window is in front, keeps it on your computer, and shows you where the hours went.",
@@ -181,6 +173,7 @@ const zhCN: Dict = {
   themeDark: "画布（深色）",
   retry: "重试",
   errors: {
+    update: "无法开始更新，请从应用菜单重试。",
     save: "这项设置没能保存。",
     unreachable: "连不上 Dopamine 代理程序，它在运行吗？",
     lost: "和 Dopamine 代理程序的连接断开了。",
@@ -188,15 +181,15 @@ const zhCN: Dict = {
   },
   footer: {
     local: "所有数据都只留在这台电脑上",
-    sharing: "你的活动只留在这台电脑上，只会分享你选定的应用分类",
-    stop: "停止分享分类选择",
-    start: "分享分类选择，帮助其他人",
-    updatesOn: "每天在 GitHub 上检查一次新版本 · 关闭",
+    updatesOn: "每天自动检查并下载更新 · 关闭",
     updatesOff: "已关闭更新检查 · 打开",
   },
   update: {
     available: (v) => `Dopamine ${v} 已发布。`,
     download: "去下载",
+    install: "更新并重启",
+    downloading: "正在下载更新…",
+    installing: "正在重新启动…",
   },
   categories: { work: "工作", study: "学习", social: "社交", entertainment: "娱乐", other: "其他" },
   stats: {
@@ -279,15 +272,6 @@ const zhCN: Dict = {
     yes: "删除",
     no: "保留",
   },
-  share: {
-    ask: (app) => ["要分享这个选择，让 Dopamine 也能帮其他人认出 ", app, " 吗？"],
-    everything: "以下就是会发送的全部内容，现在和以后的选择都一样。不含窗口标题、时间或使用情况：",
-    yes: "匿名分享",
-    no: "只留在这台电脑上",
-    code: "查看代码 →",
-    demo: "示例数据：无论怎么选都不会发送",
-    installId: "<这台电脑的随机 ID>",
-  },
   pair: {
     title: ["重新发现", "你的时间。"],
     intro: "Dopamine 记录哪个窗口在最前面，数据只存在你的电脑上，然后告诉你时间都去哪了。",
@@ -323,6 +307,7 @@ const zhTW: Dict = {
   themeDark: "畫布（深色）",
   retry: "重試",
   errors: {
+    update: "無法開始更新，請從應用程式選單重試。",
     save: "這項設定沒能儲存。",
     unreachable: "連不上 Dopamine 代理程式，它在執行嗎？",
     lost: "與 Dopamine 代理程式的連線中斷了。",
@@ -330,15 +315,15 @@ const zhTW: Dict = {
   },
   footer: {
     local: "所有資料都只留在這台電腦上",
-    sharing: "你的活動只留在這台電腦上，只會分享你選定的應用程式分類",
-    stop: "停止分享分類選擇",
-    start: "分享分類選擇，幫助其他人",
-    updatesOn: "每天在 GitHub 上檢查一次新版本 · 關閉",
+    updatesOn: "每天自動檢查並下載更新 · 關閉",
     updatesOff: "已關閉更新檢查 · 開啟",
   },
   update: {
     available: (v) => `Dopamine ${v} 已發布。`,
     download: "前往下載",
+    install: "更新並重新啟動",
+    downloading: "正在下載更新…",
+    installing: "正在重新啟動…",
   },
   categories: { work: "工作", study: "學習", social: "社交", entertainment: "娛樂", other: "其他" },
   stats: {
@@ -420,15 +405,6 @@ const zhTW: Dict = {
     ask: "永久刪除？標題會被抹掉，時間也不再計入。無法復原。",
     yes: "刪除",
     no: "保留",
-  },
-  share: {
-    ask: (app) => ["要分享這個選擇，讓 Dopamine 也能幫其他人認出 ", app, " 嗎？"],
-    everything: "以下就是會傳送的全部內容，現在和以後的選擇都一樣。不含視窗標題、時間或使用情況：",
-    yes: "匿名分享",
-    no: "只留在這台電腦上",
-    code: "查看程式碼 →",
-    demo: "範例資料：無論怎麼選都不會傳送",
-    installId: "<這台電腦的隨機 ID>",
   },
   pair: {
     title: ["重新發現", "你的時間。"],

@@ -23,7 +23,7 @@ export function AppFrame({ brand, left, right, children }: { brand?: ReactNode; 
 function TitleBar({ brand, left, right }: { brand?: ReactNode; left?: ReactNode; right?: ReactNode }) {
   const frame = useWindowFrame();
   return (
-    <header className="drag ui-text flex h-10 shrink-0 items-center text-[13px]">
+    <header className="drag flex h-10 shrink-0 items-center text-[13px]">
       <div className="flex items-center gap-2 pr-3 pl-3.5">
         <Logo className="size-[18px]" />
         <span className="hidden font-semibold text-ink sm:inline">Dopamine</span>

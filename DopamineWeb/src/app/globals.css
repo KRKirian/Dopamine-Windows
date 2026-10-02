@@ -176,17 +176,6 @@ a {
   color: #fff;
 }
 
-/* Interface type in the title bar and sidebar: the system's own UI face where there is one. */
-.ui-text {
-  font-family: "Segoe UI Variable Text", "Segoe UI", var(--font-sans);
-}
-:lang(zh-CN) .ui-text {
-  font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
-}
-:lang(zh-TW) .ui-text {
-  font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
-}
-
 :lang(zh) h1.serif {
   line-height: 1.12;
 }

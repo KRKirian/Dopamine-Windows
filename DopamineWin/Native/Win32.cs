@@ -20,9 +20,11 @@ internal static unsafe class Win32
     public const uint WM_QUERYENDSESSION = 0x0011;
     public const uint WM_ENDSESSION = 0x0016;
     public const uint WM_CONTEXTMENU = 0x007B;
+    public const uint WM_NCCALCSIZE = 0x0083;
+    public const uint WM_NCHITTEST = 0x0084;
     public const uint WM_POWERBROADCAST = 0x0218;
     public const uint WM_WTSSESSION_CHANGE = 0x02B1;
-    public const uint WM_LBUTTONDBLCLK = 0x0203;
+    public const uint WM_LBUTTONUP = 0x0202;
     public const uint WM_RBUTTONUP = 0x0205;
     public const uint WM_APP = 0x8000;
 
@@ -47,11 +49,14 @@ internal static unsafe class Win32
     // Windows
     public const uint WS_OVERLAPPEDWINDOW = 0x00CF0000;
     public const int CW_USEDEFAULT = unchecked((int)0x80000000);
-    public const int SW_SHOWMAXIMIZED = 3, SW_RESTORE = 9;
-    public const uint SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10;
+    public const int SW_SHOWMAXIMIZED = 3, SW_MAXIMIZE = 3, SW_MINIMIZE = 6, SW_RESTORE = 9;
+    public const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10, SWP_FRAMECHANGED = 0x20;
+    public const int HTTOP = 12, HTTOPLEFT = 13, HTTOPRIGHT = 14;
+    public const int SM_CYFRAME = 33, SM_CXPADDEDBORDER = 92;
     public const uint MONITOR_DEFAULTTONEAREST = 2;
-    public const uint DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    public const uint DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
     public const int IDC_ARROW = 32512;
+    public const int GCLP_HBRBACKGROUND = -10;
     public const int SM_CXICON = 11, SM_CYICON = 12;
     public static readonly IntPtr DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
     public const uint ASFW_ANY = unchecked((uint)-1);
@@ -102,6 +107,13 @@ internal static unsafe class Win32
     {
         public int X;
         public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NCCALCSIZE_PARAMS
+    {
+        public RECT rgrc0, rgrc1, rgrc2;
+        public IntPtr lppos;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -245,6 +257,9 @@ internal static unsafe class Win32
     [DllImport("user32.dll")] public static extern IntPtr GetDC(IntPtr hwnd);
     [DllImport("user32.dll")] public static extern int ShowWindow(IntPtr hwnd, int show);
     [DllImport("user32.dll")] public static extern int IsIconic(IntPtr hwnd);
+    [DllImport("user32.dll")] public static extern int IsZoomed(IntPtr hwnd);
+    [DllImport("user32.dll")] public static extern int ScreenToClient(IntPtr hwnd, POINT* point);
+    [DllImport("user32.dll")] public static extern int GetSystemMetricsForDpi(int index, uint dpi);
     [DllImport("user32.dll")] public static extern int SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int w, int h, uint flags);
     [DllImport("user32.dll")] public static extern int GetClientRect(IntPtr hwnd, RECT* rect);
     [DllImport("user32.dll")] public static extern int GetWindowPlacement(IntPtr hwnd, WINDOWPLACEMENT* placement);
@@ -254,6 +269,7 @@ internal static unsafe class Win32
     [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr hwnd);
     [DllImport("user32.dll")] public static extern int SetProcessDpiAwarenessContext(IntPtr context);
     [DllImport("user32.dll")] public static extern IntPtr LoadCursorW(IntPtr instance, IntPtr name);
+    [DllImport("user32.dll")] public static extern IntPtr SetClassLongPtrW(IntPtr hwnd, int index, IntPtr value);
     [DllImport("user32.dll")] public static extern IntPtr FindWindowW(char* className, char* windowName);
     [DllImport("user32.dll")] public static extern int AllowSetForegroundWindow(uint processId);
     [DllImport("user32.dll")] public static extern int ReleaseDC(IntPtr hwnd, IntPtr dc);

@@ -9,6 +9,12 @@ namespace DopamineWin;
 /// ships with Windows 10 and 11), pointed at the same local dashboard a browser would show.
 /// Closing it closes the browser engine too, so the tray agent goes back to its usual footprint.
 /// If WebView2 isn't available, the dashboard opens in the default browser as before.
+///
+/// The window has no Windows title bar: the page draws its own, with the dashboard's buttons and
+/// the minimise, maximise and close buttons, the way Discord or VS Code do. The page marks that bar
+/// with the CSS <c>app-region: drag</c>, so it moves the window, snaps, and double-clicks to
+/// maximise. The resize borders stay Windows' own. On a WebView2 runtime too old for <c>app-region</c>,
+/// the window keeps its usual title bar.
 /// </summary>
 public sealed unsafe class DashboardWindow
 {
@@ -16,8 +22,18 @@ public sealed unsafe class DashboardWindow
     private const int ApplicationIconId = 32512;
     private const int Width = 1280, Height = 860, MinWidth = 420, MinHeight = 360; // at 96 dpi
 
-    // The paper colour of the dashboard (globals.css), so the window never flashes white while loading.
-    private static readonly (byte R, byte G, byte B) LightPaper = (0xf4, 0xf1, 0xea), DarkPaper = (0x16, 0x15, 0x12);
+    /// <summary>A strip along the top edge left uncovered by the page, so the window can be resized from there (at 96 dpi).</summary>
+    private const int TopResizeBand = 4;
+
+    /// <summary>Posted to the window when settings change, so it recolours for the dashboard's theme on its own thread.</summary>
+    private const uint ThemeChangedMessage = WM_APP + 1;
+
+    // The colour of the page's title bar and sidebar (--chrome in globals.css) and its ink (--ink),
+    // so the window never flashes white while loading and its top edge matches the page.
+    private static readonly (byte R, byte G, byte B) LightPaper = (0xeb, 0xe6, 0xdb), DarkPaper = (0x0f, 0x0e, 0x0c);
+    private static readonly (byte R, byte G, byte B) LightInk = (0x22, 0x1f, 0x1b), DarkInk = (0xf1, 0xec, 0xe2);
+
+    private static uint ColorRef((byte R, byte G, byte B) c) => (uint)(c.R | c.G << 8 | c.B << 16);
 
     private static DashboardWindow? _instance; // the window procedure is static; it reaches the window through this
 
@@ -27,15 +43,25 @@ public sealed unsafe class DashboardWindow
     private IntPtr _webview;
     private bool _creating;
     private bool _loggedLoad;
+    private bool _frameless = true; // until the runtime turns out too old for app-region
     private WINDOWPLACEMENT? _placement; // where the window was last closed, for this run
 
     public DashboardWindow(SettingsService settings)
     {
         _settings = settings;
         _instance = this;
+        // Raised on the API's threads; the window and WebView2 may only be touched on the tray's UI thread.
+        _settings.Changed += () =>
+        {
+            var hwnd = _hwnd;
+            if (hwnd != IntPtr.Zero) PostMessageW(hwnd, ThemeChangedMessage, IntPtr.Zero, IntPtr.Zero);
+        };
     }
 
     private string Url => ApiServer.DashboardUrl(_settings.Settings.PairingCode);
+
+    /// <summary>Tells the page to draw the title bar and window buttons itself.</summary>
+    private string WindowUrl => _frameless ? ApiServer.DashboardUrl(_settings.Settings.PairingCode, customFrame: true) : Url;
 
     /// <summary>Opens the window, or brings it to the front if it's already open. Call on the tray's UI thread.</summary>
     public void Show()
@@ -122,32 +148,90 @@ public sealed unsafe class DashboardWindow
         _controller = controller;
         _webview = WebView2.GetCoreWebView2(controller);
 
-        var controller2 = WebView2.QueryInterface(controller, WebView2.IID_Controller2);
-        if (controller2 != IntPtr.Zero)
-        {
-            var paper = IsDarkMode() ? DarkPaper : LightPaper;
-            WebView2.SetDefaultBackgroundColor(controller2, paper.R, paper.G, paper.B);
-            WebView2.Release(ref controller2);
-        }
+        ApplyTheme();
 
-        var settings = WebView2.GetSettings(_webview);
-        if (settings != IntPtr.Zero)
-        {
-            WebView2.SetStatusBarEnabled(settings, false); // no link previews in the corner, as in a browser
-#if !DEBUG
-            WebView2.SetDevToolsEnabled(settings, false);
-#endif
-            WebView2.Release(ref settings);
-        }
+        ConfigureSettings();
 
         AddHandler(WebView2.IID_NewWindowRequested, OnNewWindowRequested, WebView2.AddNewWindowRequested);
         AddHandler(WebView2.IID_NavigationStarting, OnNavigationStarting, WebView2.AddNavigationStarting);
         AddHandler(WebView2.IID_NavigationCompleted, OnNavigationCompleted, WebView2.AddNavigationCompleted);
+        AddHandler(WebView2.IID_WebMessageReceived, OnWebMessageReceived, WebView2.AddWebMessageReceived);
 
         Resize();
         WebView2.SetVisible(_controller, true);
-        WebView2.Navigate(_webview, Url);
+        WebView2.Navigate(_webview, WindowUrl);
         WebView2.MoveFocus(_controller);
+    }
+
+    /// <summary>Makes the page behave like an app rather than a browser tab.</summary>
+    private void ConfigureSettings()
+    {
+        var settings = WebView2.GetSettings(_webview);
+        if (settings == IntPtr.Zero)
+        {
+            UseWindowsTitleBar();
+            return;
+        }
+
+        WebView2.SetStatusBarEnabled(settings, false); // no link previews in the corner, as in a browser
+#if !DEBUG
+        WebView2.SetDevToolsEnabled(settings, false);
+
+        // No reload, find, print or zoom keys. Copy, paste and the other editing keys still work.
+        var settings3 = WebView2.QueryInterface(settings, WebView2.IID_Settings3);
+        if (settings3 != IntPtr.Zero)
+        {
+            WebView2.SetBrowserAcceleratorKeysEnabled(settings3, false);
+            WebView2.Release(ref settings3);
+        }
+#endif
+
+        var settings9 = WebView2.QueryInterface(settings, WebView2.IID_Settings9);
+        var dragRegions = settings9 != IntPtr.Zero && WebView2.SetNonClientRegionSupportEnabled(settings9, true) >= 0;
+        WebView2.Release(ref settings9);
+        WebView2.Release(ref settings);
+        if (!dragRegions)
+        {
+            Log.Info("This WebView2 runtime has no app-region support; the dashboard window keeps the Windows title bar");
+            UseWindowsTitleBar();
+        }
+    }
+
+    /// <summary>Gives the window back its usual title bar, for runtimes that can't drag it by the page's.</summary>
+    private void UseWindowsTitleBar()
+    {
+        if (!_frameless) return;
+        _frameless = false;
+        SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        Resize();
+    }
+
+    /// <summary>The page's window buttons: "minimize", "maximize" (which restores a maximised window), "close"; "state" asks for <see cref="PostWindowState"/>.</summary>
+    private void OnWebMessageReceived(IntPtr sender, IntPtr args)
+    {
+        if (!IsDashboard(WebView2.GetUri(args))) return;
+        switch (WebView2.GetWebMessageAsString(args))
+        {
+            case "minimize":
+                ShowWindow(_hwnd, SW_MINIMIZE);
+                break;
+            case "maximize":
+                ShowWindow(_hwnd, IsZoomed(_hwnd) != 0 ? SW_RESTORE : SW_MAXIMIZE);
+                break;
+            case "close":
+                PostMessageW(_hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                break;
+            case "state":
+                PostWindowState();
+                break;
+        }
+    }
+
+    /// <summary>Tells the page whether the window is maximised, so its maximise button shows the right glyph.</summary>
+    private void PostWindowState()
+    {
+        if (_webview == IntPtr.Zero) return;
+        WebView2.PostWebMessageAsJson(_webview, IsZoomed(_hwnd) != 0 ? """{"maximized":true}""" : """{"maximized":false}""");
     }
 
     private void AddHandler(Guid iid, Action<IntPtr, IntPtr> invoke, Func<IntPtr, IntPtr, int> add)
@@ -205,7 +289,7 @@ public sealed unsafe class DashboardWindow
         fixed (char* className = ClassName)
         fixed (char* title = "Dopamine")
         {
-            var paper = IsDarkMode() ? DarkPaper : LightPaper;
+            var paper = IsDark() ? DarkPaper : LightPaper;
             var wc = new WNDCLASSEXW
             {
                 cbSize = (uint)sizeof(WNDCLASSEXW),
@@ -215,7 +299,7 @@ public sealed unsafe class DashboardWindow
                 hIcon = LoadImageW(module, ApplicationIconId, IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR),
                 hIconSm = LoadImageW(module, ApplicationIconId, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR),
                 hCursor = LoadCursorW(IntPtr.Zero, IDC_ARROW),
-                hbrBackground = CreateSolidBrush((uint)(paper.R | paper.G << 8 | paper.B << 16)),
+                hbrBackground = CreateSolidBrush(ColorRef(paper)),
             };
             RegisterClassExW(&wc); // fails harmlessly once the class exists
 
@@ -225,8 +309,9 @@ public sealed unsafe class DashboardWindow
 
         if (_hwnd == IntPtr.Zero) return false;
 
-        var dark = IsDarkMode() ? 1 : 0;
-        DwmSetWindowAttribute(_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(int));
+        // WM_NCCALCSIZE arrived during CreateWindowExW, before _hwnd was known: ask again without the title bar.
+        SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        ApplyTheme();
 
         if (_placement is { } saved)
         {
@@ -251,12 +336,51 @@ public sealed unsafe class DashboardWindow
         return true;
     }
 
+    /// <summary>
+    /// Colours the title bar, the window background and WebView2's own background for the theme the
+    /// dashboard shows, so its light/dark toggle recolours the whole window at once.
+    /// </summary>
+    private void ApplyTheme()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+        var isDark = IsDark();
+        var paper = isDark ? DarkPaper : LightPaper;
+        var dark = isDark ? 1 : 0;
+        DwmSetWindowAttribute(_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(int));
+        // Paper-coloured title bar with ink text. Windows 11 only; Windows 10 ignores these and keeps
+        // the light or dark system title bar set above.
+        var caption = ColorRef(paper);
+        var captionText = ColorRef(isDark ? DarkInk : LightInk);
+        DwmSetWindowAttribute(_hwnd, DWMWA_CAPTION_COLOR, &caption, sizeof(uint));
+        DwmSetWindowAttribute(_hwnd, DWMWA_TEXT_COLOR, &captionText, sizeof(uint));
+
+        var previous = SetClassLongPtrW(_hwnd, GCLP_HBRBACKGROUND, CreateSolidBrush(ColorRef(paper)));
+        if (previous != IntPtr.Zero) DeleteObject(previous);
+
+        if (_controller == IntPtr.Zero) return;
+        var controller2 = WebView2.QueryInterface(_controller, WebView2.IID_Controller2);
+        if (controller2 == IntPtr.Zero) return;
+        WebView2.SetDefaultBackgroundColor(controller2, paper.R, paper.G, paper.B);
+        WebView2.Release(ref controller2);
+    }
+
     private void Resize()
     {
         if (_controller == IntPtr.Zero) return;
         RECT bounds;
         GetClientRect(_hwnd, &bounds);
+        bounds.Top += TopBand();
         WebView2.SetBounds(_controller, bounds);
+    }
+
+    /// <summary>The resize strip above the page: none with a Windows title bar, or when maximised.</summary>
+    private int TopBand() => _frameless && IsZoomed(_hwnd) == 0 ? (int)Math.Ceiling(TopResizeBand * GetDpiForWindow(_hwnd) / 96.0) : 0;
+
+    /// <summary>How far a maximised window hangs over the screen edge: its resize border.</summary>
+    private int FrameThickness()
+    {
+        var dpi = GetDpiForWindow(_hwnd);
+        return GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
     }
 
     [UnmanagedCallersOnly]
@@ -281,6 +405,35 @@ public sealed unsafe class DashboardWindow
         {
             case WM_SIZE:
                 Resize();
+                PostWindowState();
+                return IntPtr.Zero;
+
+            // No title bar: the client area starts at the top edge. The side and bottom resize borders
+            // stay as Windows draws them; a maximised window still keeps its top border off screen.
+            case WM_NCCALCSIZE when _frameless && wParam != IntPtr.Zero:
+            {
+                var p = (NCCALCSIZE_PARAMS*)lParam;
+                var top = p->rgrc0.Top;
+                DefWindowProcW(_hwnd, msg, wParam, lParam);
+                p->rgrc0.Top = top + (IsZoomed(_hwnd) != 0 ? FrameThickness() : 0);
+                return IntPtr.Zero;
+            }
+
+            // The strip above the page resizes the window from the top edge and corners. Windows
+            // would still find a caption and its buttons there, so it isn't asked.
+            case WM_NCHITTEST when _frameless && IsZoomed(_hwnd) == 0:
+            {
+                var point = new POINT { X = (short)(long)lParam, Y = (short)((long)lParam >> 16) };
+                ScreenToClient(_hwnd, &point);
+                if (point.Y >= TopBand()) return null; // the side and bottom borders, as usual
+                RECT client;
+                GetClientRect(_hwnd, &client);
+                var corner = FrameThickness();
+                return point.X < corner ? HTTOPLEFT : point.X >= client.Right - corner ? HTTOPRIGHT : HTTOP;
+            }
+
+            case ThemeChangedMessage:
+                ApplyTheme();
                 return IntPtr.Zero;
 
             case WM_MOVE:
@@ -322,6 +475,14 @@ public sealed unsafe class DashboardWindow
 
         return null;
     }
+
+    /// <summary>The dashboard's theme as it last reported it, or Windows' app mode until it has.</summary>
+    private bool IsDark() => _settings.Settings.Theme switch
+    {
+        "dark" => true,
+        "light" => false,
+        _ => IsDarkMode(),
+    };
 
     /// <summary>Whether Windows is set to dark mode for apps, which the dashboard follows by default.</summary>
     private static bool IsDarkMode()

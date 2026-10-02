@@ -138,7 +138,7 @@ public sealed unsafe class TrayIcon
                 case WM_RBUTTONUP or WM_CONTEXTMENU:
                     ShowMenu();
                     break;
-                case WM_LBUTTONDBLCLK:
+                case WM_LBUTTONUP: // one click opens the dashboard, or brings it to the front
                     OpenDashboard();
                     break;
             }

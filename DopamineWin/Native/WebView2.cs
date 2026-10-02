@@ -22,7 +22,10 @@ internal static unsafe class WebView2
     public static readonly Guid IID_NewWindowRequested = new("d4c185fe-c81c-4989-97af-2d3fa7ab5651");
     public static readonly Guid IID_NavigationStarting = new("9adbe429-f36d-432b-9ddc-f8881fbd76e3");
     public static readonly Guid IID_NavigationCompleted = new("d33a35bf-1c49-4f98-93ab-006e0533fe1c");
+    public static readonly Guid IID_WebMessageReceived = new("57213f19-00e6-49fa-8e07-898ea01ecbd2");
     public static readonly Guid IID_Controller2 = new("c979903e-d4ca-4228-92eb-47ee3fa96eab");
+    public static readonly Guid IID_Settings3 = new("fdb5ab74-af33-4854-84f0-0a631deb5eba");
+    public static readonly Guid IID_Settings9 = new("0528a73b-e92d-49f4-927a-e547dddaa37d");
 
     private static void** Vtbl(IntPtr obj) => *(void***)obj;
 
@@ -83,8 +86,14 @@ internal static unsafe class WebView2
         fixed (char* u = uri) return ((delegate* unmanaged[Stdcall]<IntPtr, char*, int>)Vtbl(webview)[5])(webview, u);
     }
 
+    public static int PostWebMessageAsJson(IntPtr webview, string json)
+    {
+        fixed (char* j = json) return ((delegate* unmanaged[Stdcall]<IntPtr, char*, int>)Vtbl(webview)[32])(webview, j);
+    }
+
     public static int AddNavigationStarting(IntPtr webview, IntPtr handler) => AddEvent(webview, 7, handler);
     public static int AddNavigationCompleted(IntPtr webview, IntPtr handler) => AddEvent(webview, 15, handler);
+    public static int AddWebMessageReceived(IntPtr webview, IntPtr handler) => AddEvent(webview, 34, handler);
     public static int AddNewWindowRequested(IntPtr webview, IntPtr handler) => AddEvent(webview, 44, handler);
 
     private static int AddEvent(IntPtr webview, int slot, IntPtr handler)
@@ -97,10 +106,17 @@ internal static unsafe class WebView2
     public static int SetStatusBarEnabled(IntPtr settings, bool enabled) => SetBool(settings, 10, enabled);
     public static int SetDevToolsEnabled(IntPtr settings, bool enabled) => SetBool(settings, 12, enabled);
 
+    // ICoreWebView2Settings3 and 9: each extends the one before, so the slots keep counting.
+    public static int SetBrowserAcceleratorKeysEnabled(IntPtr settings3, bool enabled) => SetBool(settings3, 24, enabled);
+
+    /// <summary>Lets the page mark its own title bar with the CSS <c>app-region: drag</c> (runtime 1.0.2420 and later).</summary>
+    public static int SetNonClientRegionSupportEnabled(IntPtr settings9, bool enabled) => SetBool(settings9, 38, enabled);
+
     private static int SetBool(IntPtr obj, int slot, bool value) =>
         ((delegate* unmanaged[Stdcall]<IntPtr, int, int>)Vtbl(obj)[slot])(obj, value ? 1 : 0);
 
-    // Event args. get_Uri is slot 3 on both NewWindowRequested and NavigationStarting args.
+    // Event args. Slot 3 is get_Uri on NewWindowRequested and NavigationStarting args, and get_Source
+    // (the page's address) on WebMessageReceived args, so GetUri reads all three.
     public static string GetUri(IntPtr args)
     {
         char* uri;
@@ -112,6 +128,21 @@ internal static unsafe class WebView2
         finally
         {
             Marshal.FreeCoTaskMem((IntPtr)uri);
+        }
+    }
+
+    /// <summary>What the page sent with <c>chrome.webview.postMessage("…")</c>; null if it sent anything but a string.</summary>
+    public static string? GetWebMessageAsString(IntPtr args)
+    {
+        char* message;
+        if (((delegate* unmanaged[Stdcall]<IntPtr, char**, int>)Vtbl(args)[5])(args, &message) < 0 || message == null) return null;
+        try
+        {
+            return new string(message);
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem((IntPtr)message);
         }
     }
 
